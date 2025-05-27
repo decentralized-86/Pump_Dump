@@ -1,0 +1,45 @@
+.wallet-adapter-button {
+  background-color: transparent !important;
+  border: none !important;
+  color: #fff !important;
+  padding: 0 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+}
+
+.wallet-adapter-button-trigger {
+  background-color: rgba(74, 222, 128, 0.1) !important;
+  padding: 12px 20px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(74, 222, 128, 0.2) !important;
+  color: rgb(74, 222, 128) !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+.wallet-adapter-button-trigger:hover {
+  background-color: rgba(74, 222, 128, 0.2) !important;
+  border-color: rgba(74, 222, 128, 0.3) !important;
+}
+
+.wallet-adapter-button-trigger:active {
+  background-color: rgba(74, 222, 128, 0.3) !important;
+}
+
+.wallet-adapter-modal-wrapper {
+  background-color: rgb(17, 24, 39) !important;
+  border: 1px solid rgba(74, 222, 128, 0.1) !important;
+  border-radius: 16px !important;
+}
+
+.wallet-adapter-modal-button-close {
+  background-color: rgba(74, 222, 128, 0.1) !important;
+}
+
+.wallet-adapter-modal-title {
+  color: rgb(74, 222, 128) !important;
+}
+
+.wallet-adapter-modal-list {
+  margin: 0 !important;
+} 

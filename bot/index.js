@@ -106,7 +106,6 @@ bot.command("start", async (ctx) => {
       lastLoginAt: new Date(),
       lastDailyReward: 0,
       inviterId,
-      walletAddress: "WalletAddress",
     });
     await newUser.save();
     user = newUser;

@@ -1,17 +1,27 @@
 const express = require("express");
 const PumpUser = require("../models/PumpUser");
+const GameSession = require("../models/GameSession");
 const logger = require("../services/logger");
 const PumpHist = require("../models/PumpHist");
 const Joi = require("joi");
 const PumpProject = require("../models/PumpProject");
 const { calculatePoint } = require("../utils/calc");
 const { remainTimeMs } = require("../services/remain");
+const walletService = require("../services/wallet");
+const gameService = require("../services/game");
+const globalDayService = require("../services/globalDay");
+const twitterService = require("../services/twitter");
+const cache = require("../services/cache");
+const rateLimit = require("../middlewares/rateLimit");
 
 const router = express.Router();
 
 router.get("/rank-me", async (req, res) => {
   const user = req.bean.user;
   try {
+    const cacheKey = cache.generateKey('rank', user.tgId);
+    
+    const rankData = await cache.getOrSet(cacheKey, async () => {
     const userRank = await PumpUser.aggregate([
       {
         $sort: {
@@ -32,8 +42,6 @@ router.get("/rank-me", async (req, res) => {
         },
       },
     ]);
-
-    const myUserRank = userRank[0]?.rank + 1 || 1;
 
     const projectRank = await PumpProject.aggregate([
       {
@@ -56,22 +64,23 @@ router.get("/rank-me", async (req, res) => {
       },
     ]);
 
-    const myProjectRank = projectRank[0]?.rank + 1 || 1;
-
     const userProject = await PumpProject.findOne({
       projectId: user.projectId,
     });
 
-    return res.json({
+      return {
       userId: user.userId,
-      userRank: myUserRank,
-      projectRank: myProjectRank,
+        userRank: userRank[0]?.rank + 1 || 1,
+        projectRank: projectRank[0]?.rank + 1 || 1,
       userScore: user.maxScore,
       projectId: user.projectId || null,
       projectName: userProject?.name,
       projectPoints: userProject?.points || 0,
       avatar: user.avatar,
-    });
+      };
+    }, cache.DURATIONS.SHORT);
+
+    return res.json(rankData);
   } catch (error) {
     console.error("Error calculating rank:", error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -376,18 +385,24 @@ router.get("/history", async (req, res) => {
 router.get("/profile", async (req, res) => {
   try {
     const user = req.bean.user;
+    const cacheKey = cache.generateKey('profile', user.tgId);
+    
+    const profile = await cache.getOrSet(cacheKey, async () => {
     const project = await PumpProject.findOne({
       projectId: user.projectId,
     }).exec();
+      
     let projectPoints = 0;
     let projectName = "---";
     let projectWalletAddress = "---";
+      
     if (project) {
       projectPoints = project.points;
       projectName = project.name;
       projectWalletAddress = project.walletAddress;
     }
-    return res.json({
+      
+      return {
       name: user.userId,
       walletAddress: user.walletAddress,
       maxScore: user.maxScore,
@@ -396,11 +411,482 @@ router.get("/profile", async (req, res) => {
       projectPoints,
       projectName,
       projectWalletAddress,
-    });
+      };
+    }, cache.DURATIONS.MEDIUM);
+
+    return res.json(profile);
   } catch (err) {
     logger.error(err);
     return res.status(500).json({ error: "Internal Server Error" });
   }
+});
+
+// New routes for wallet and game functionality
+router.post("/prepare-wallet-verification", async (req, res) => {
+    try {
+        const { walletAddress } = req.body;
+        if (!walletAddress) {
+            return res.status(400).json({ error: "Missing wallet address" });
+        }
+
+        const verificationData = await walletService.prepareWalletVerification(walletAddress);
+        return res.json({
+            success: true,
+            message: verificationData.message,
+            nonce: verificationData.nonce
+        });
+    } catch (error) {
+        logger.error("Error preparing wallet verification", { error });
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+router.post("/verify-wallet", rateLimit('wallet'), async (req, res) => {
+    try {
+        const { signature, walletAddress } = req.body;
+        if (!signature || !walletAddress) {
+            return res.status(400).json({ error: "Missing signature or wallet address" });
+        }
+
+        const isValid = await walletService.verifyWalletConnection(signature, walletAddress);
+        if (!isValid) {
+            return res.status(400).json({ error: "Invalid signature" });
+        }
+
+        // Update user's wallet address
+        const user = req.bean.user;
+        user.walletAddress = walletAddress;
+        await user.save();
+
+        return res.json({ success: true });
+    } catch (error) {
+        logger.error("Error verifying wallet", { error });
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+router.post("/purchase-access", rateLimit('wallet'), async (req, res) => {
+    try {
+        const { signature } = req.body;
+        if (!signature) {
+            return res.status(400).json({ error: "Missing transaction signature" });
+        }
+
+        const success = await gameService.grantPaidAccess(req.bean.user.tgId, signature);
+        if (!success) {
+            return res.status(400).json({ error: "Invalid payment" });
+        }
+
+        return res.json({ success: true });
+    } catch (error) {
+        logger.error("Error processing payment", { error });
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+router.get("/check-eligibility", rateLimit('play'), async (req, res) => {
+    try {
+        const user = req.bean.user;
+        const eligibility = await gameService.canUserPlay(user.tgId, user.walletAddress);
+        return res.json(eligibility);
+    } catch (error) {
+        logger.error("Error checking eligibility", { error });
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+router.post("/verify-tweet", rateLimit('tweet'), async (req, res) => {
+    try {
+        const { tweetId } = req.body;
+        if (!tweetId) {
+            return res.status(400).json({ error: "Missing tweet ID" });
+        }
+
+        const result = await twitterService.verifyTweet(tweetId, req.bean.user.tgId);
+        if (!result.success) {
+            return res.status(400).json({ error: result.reason });
+        }
+
+        // Grant an extra play through game service
+        await gameService.verifyTweet(req.bean.user.tgId, tweetId);
+
+        return res.json({ success: true });
+    } catch (error) {
+        logger.error("Error verifying tweet", { error });
+        return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get current user's game state
+router.get("/state", async (req, res) => {
+  try {
+    const user = await gameService.getUserState(req.bean.user.tgId);
+    const canPlay = await gameService.canUserPlay(user.tgId, user.walletAddress);
+    
+    return res.json({
+      userId: user.tgId,
+      displayName: user.displayName,
+      avatar: user.avatar,
+      accessType: user.accessType,
+      freePlaysRemaining: user.freePlaysRemaining,
+      tweetVerifiedToday: user.tweetVerifiedToday,
+      currentProject: user.currentProject,
+      highestScore: user.highestScore,
+      canPlay: canPlay.canPlay,
+      playReason: canPlay.reason
+    });
+  } catch (error) {
+    logger.error("Error getting game state:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Start a new game session
+router.post("/start", async (req, res) => {
+  try {
+    const user = req.bean.user;
+    
+    // Check if user can play
+    const canPlay = await gameService.canUserPlay(user.tgId, user.walletAddress);
+    if (!canPlay.canPlay) {
+      return res.status(403).json({ 
+        message: "You cannot play at this time",
+        reason: canPlay.reason
+      });
+    }
+    
+    // Start session
+    const session = await gameService.startGameSession(
+      user.tgId,
+      user.currentProject?.projectId
+    );
+    
+    // Consume play if needed
+    await gameService.consumePlay(user.tgId);
+    
+    return res.json({
+      sessionId: session._id,
+      message: "Game session started successfully"
+    });
+  } catch (error) {
+    logger.error("Error starting game:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// End a game session
+router.post("/end", async (req, res) => {
+  try {
+    const schema = Joi.object({
+      sessionId: Joi.string().required(),
+      obstaclesPassed: Joi.number().min(0).required()
+    });
+    
+    const { error, value } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+    
+    const session = await gameService.endGameSession(
+      value.sessionId,
+      value.obstaclesPassed
+    );
+    
+    return res.json({
+      score: session.currentScore,
+      isHighScore: session.isHighScore,
+      isDailyHighScore: session.isDailyHighScore,
+      mcPointsEarned: session.mcPointsEarned
+    });
+  } catch (error) {
+    logger.error("Error ending game:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Get daily leaderboard
+router.get("/leaderboard/daily", async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 10, 100);
+    const leaderboard = await globalDayService.getDailyLeaderboard(limit);
+    return res.json(leaderboard);
+  } catch (error) {
+    logger.error("Error getting daily leaderboard:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Get project leaderboard
+router.get("/leaderboard/projects", async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 10, 100);
+    const leaderboard = await globalDayService.getProjectLeaderboard(limit);
+    return res.json(leaderboard);
+  } catch (error) {
+    logger.error("Error getting project leaderboard:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Get user's rank
+router.get("/rank", async (req, res) => {
+  const user = req.bean.user;
+  try {
+    const cacheKey = cache.generateKey('rank', user.tgId);
+    
+    const rankData = await cache.getOrSet(cacheKey, async () => {
+      const [currentDay, userProject] = await Promise.all([
+        globalDayService.getCurrentDay(),
+        user.currentProject?.projectId ? PumpProject.findOne({ projectId: user.currentProject.projectId }) : null
+      ]);
+
+      // Get user's daily rank
+      const dailyRank = await GameSession.countDocuments({
+        globalDayId: currentDay._id,
+        currentScore: { $gt: user.highestScore }
+      }) + 1;
+
+      // Get project's daily rank if user has a project
+      let projectRank = null;
+      if (userProject) {
+        projectRank = await PumpProject.countDocuments({
+          currentGlobalDayId: currentDay._id,
+          dailyPoints: { $gt: userProject.dailyPoints }
+        }) + 1;
+      }
+
+      return {
+        userId: user.tgId,
+        displayName: user.displayName,
+        avatar: user.avatar,
+        dailyRank,
+        dailyScore: user.highestScore,
+        projectId: userProject?.projectId,
+        projectName: userProject?.name,
+        projectRank,
+        projectPoints: userProject?.dailyPoints || 0
+      };
+    }, cache.DURATIONS.SHORT);
+
+    return res.json(rankData);
+  } catch (error) {
+    logger.error("Error calculating rank:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Update user's project
+router.post("/project", async (req, res) => {
+  try {
+    const schema = Joi.object({
+      projectId: Joi.string().required()
+    });
+    
+    const { error, value } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+    
+    const user = req.bean.user;
+    const project = await PumpProject.findOne({ projectId: value.projectId });
+    
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+    
+    if (user.currentProject?.projectId === value.projectId) {
+      return res.status(400).json({ message: "You are already in this project" });
+    }
+    
+    user.currentProject = {
+      projectId: project.projectId,
+      name: project.name,
+      joinedAt: new Date()
+    };
+    
+    await user.save();
+    
+    return res.json({
+      message: "Project updated successfully",
+      project: {
+        projectId: project.projectId,
+        name: project.name,
+        imageUrl: project.imageUrl
+      }
+    });
+  } catch (error) {
+    logger.error("Error updating project:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Verify tweet for extra play
+router.post("/verify-tweet", async (req, res) => {
+  try {
+    const schema = Joi.object({
+      tweetId: Joi.string().required()
+    });
+    
+    const { error, value } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+    
+    const user = req.bean.user;
+    
+    // Verify tweet content and ownership
+    const isValid = await twitterService.verifyTweet(value.tweetId, user.tgId);
+    if (!isValid) {
+      return res.status(400).json({ message: "Invalid tweet" });
+    }
+    
+    // Grant extra play
+    const success = await gameService.verifyTweet(user.tgId, value.tweetId);
+    if (!success) {
+      return res.status(400).json({ message: "Tweet already verified today" });
+    }
+    
+    return res.json({
+      message: "Tweet verified successfully",
+      freePlaysRemaining: user.freePlaysRemaining
+    });
+  } catch (error) {
+    logger.error("Error verifying tweet:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Get all projects
+router.get("/projects", async (req, res) => {
+  try {
+    const projects = await PumpProject.find()
+      .select('projectId name imageUrl dailyPoints playerCount')
+      .sort('-dailyPoints');
+      
+    return res.json(projects);
+  } catch (error) {
+    logger.error("Error getting projects:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Search projects
+router.get("/projects/search", async (req, res) => {
+  try {
+    const searchTerm = req.query.q || "";
+    const projects = await PumpProject.find({
+      name: { $regex: searchTerm, $options: "i" }
+    })
+    .select('projectId name imageUrl dailyPoints playerCount')
+    .sort('-dailyPoints')
+    .limit(20);
+    
+    return res.json(projects);
+  } catch (error) {
+    logger.error("Error searching projects:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Get user profile
+router.get('/profile', async (req, res) => {
+    try {
+        const user = req.user;
+        res.json({
+            tgId: user.tgId,
+            username: user.username,
+            displayName: user.displayName,
+            freePlaysRemaining: user.freePlaysRemaining,
+            walletAddress: user.walletAddress
+        });
+    } catch (error) {
+        logger.error('Error fetching profile:', error);
+        res.status(500).json({ message: 'Failed to fetch profile' });
+    }
+});
+
+// Get leaderboard
+router.get('/leaderboard', async (req, res) => {
+    try {
+        const leaderboard = await globalDayService.getDailyLeaderboard();
+        res.json(leaderboard);
+    } catch (error) {
+        logger.error('Error fetching leaderboard:', error);
+        res.status(500).json({ message: 'Failed to fetch leaderboard' });
+    }
+});
+
+// Start game session
+router.post('/start', rateLimit('play'), async (req, res) => {
+    try {
+        const { projectId } = req.body;
+        
+        if (!projectId) {
+            return res.status(400).json({ message: 'Project ID is required' });
+        }
+
+        const project = await PumpProject.findById(projectId);
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        const currentDay = await globalDayService.getCurrentDay();
+        
+        const session = new GameSession({
+            userId: req.user._id,
+            projectId: project._id,
+            globalDayId: currentDay._id,
+            startedAt: new Date(),
+            currentScore: 0
+        });
+
+        await session.save();
+
+        res.json({
+            sessionId: session._id,
+            project: {
+                name: project.name,
+                imageUrl: project.imageUrl
+            }
+        });
+
+    } catch (error) {
+        logger.error('Error starting game session:', error);
+        res.status(500).json({ message: 'Failed to start game session' });
+    }
+});
+
+// Submit game play
+router.post('/play', rateLimit('play'), async (req, res) => {
+    try {
+        const { sessionId, score } = req.body;
+
+        if (!sessionId || typeof score !== 'number') {
+            return res.status(400).json({ message: 'Session ID and score are required' });
+        }
+
+        const session = await GameSession.findById(sessionId);
+        if (!session) {
+            return res.status(404).json({ message: 'Game session not found' });
+        }
+
+        if (session.userId.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to update this session' });
+        }
+
+        session.currentScore = score;
+        session.lastPlayedAt = new Date();
+        await session.save();
+
+        res.json({
+            sessionId: session._id,
+            currentScore: session.currentScore
+        });
+
+    } catch (error) {
+        logger.error('Error submitting play:', error);
+        res.status(500).json({ message: 'Failed to submit play' });
+    }
 });
 
 module.exports = router;

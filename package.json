@@ -1,35 +1,51 @@
 {
-  "name": "pumpshie-pumps-service",
+  "name": "solpump",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "Telegram-based web game with Solana integration",
+  "main": "app.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "bot:dev": "node botrun.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "jest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "solana",
+    "telegram",
+    "game",
+    "web3"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
-    "@telegram-apps/init-data-node": "^1.2.0",
-    "config": "^3.3.12",
+    "@solana/spl-token": "^0.1.8",
+    "@solana/web3.js": "^1.98.2",
+    "compression": "^1.8.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "esm": "^3.2.25",
-    "express": "^4.21.1",
-    "express-rate-limit": "^7.4.1",
-    "joi": "^17.13.3",
+    "dotenv": "^16.3.1",
+    "express": "^4.21.2",
+    "helmet": "^7.2.0",
+    "ioredis": "^5.6.1",
+    "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
-    "prom-client": "^15.1.3",
+    "mongoose": "^8.15.0",
+    "morgan": "^1.10.0",
+    "node-cron": "^3.0.3",
+    "redis": "^4.6.11",
     "telegraf": "^4.16.3",
+    "tweetnacl": "^1.0.3",
     "winston": "^3.17.0"
   },
   "devDependencies": {
-    "mocha": "^10.8.2",
-    "mongoose": "^8.8.1",
-    "sinon": "^19.0.2",
-    "supertest": "^7.0.0"
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/solpump.git"
   },
   "pkg": {
     "targets": [
