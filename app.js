@@ -7,7 +7,6 @@ const compression = require('compression');
 const { scheduleGlobalDayReset, schedulePeriodicCheck } = require('./cron/globalDayReset');
 const gameRoutes = require('./routes/game');
 const publicRoutes = require('./routes/public');
-const walletRoutes = require('./routes/wallet');
 const authMiddleware = require('./middlewares/auth');
 const errorHandler = require('./middlewares/errorHandler');
 const logger = require('./services/logger');
@@ -28,18 +27,14 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/public', publicRoutes);
 app.use('/api/game', authMiddleware, gameRoutes);
-app.use('/api/wallet', authMiddleware, walletRoutes);
 
 // Error handling
 app.use(errorHandler);
 
 // Connect to MongoDB
-mongoose.connect(config.mongoUrl, {
+mongoose.connect(config.mongoUri, {
   useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-  family: 4 // Force IPv4
+  useUnifiedTopology: true
 })
 .then(() => {
   logger.info('Connected to MongoDB');
@@ -52,7 +47,6 @@ mongoose.connect(config.mongoUrl, {
 })
 .catch(error => {
   logger.error('MongoDB connection error:', error);
-  console.log('MongoDB connection error:', error);
   process.exit(1);
 });
 
@@ -60,8 +54,6 @@ mongoose.connect(config.mongoUrl, {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   logger.info(`Server running on port ${PORT}`);
-
-  console.log(`Server running on port ${PORT}`);
   
   // Start Telegram bot
   try {

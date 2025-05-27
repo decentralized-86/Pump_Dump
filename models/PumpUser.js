@@ -50,8 +50,7 @@ const PumpUserSchema = new mongoose.Schema({
   // Wallet & Access
   walletAddress: {
     type: String,
-    sparse: true,
-    index: true
+    sparse: true
   },
   walletVerifiedAt: Date,
   accessType: {
@@ -147,6 +146,7 @@ const PumpUserSchema = new mongoose.Schema({
 // Indexes
 PumpUserSchema.index({ mcPoints: -1 }); // For leaderboard queries
 PumpUserSchema.index({ "currentProject.projectId": 1 }); // For project-based queries
+PumpUserSchema.index({ walletAddress: 1 }); // For wallet verification
 PumpUserSchema.index({ currentGlobalDayId: 1 }); // For global day queries
 
 // Methods

@@ -1,7 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import Script from 'next/script'
-import Providers from '@/components/Providers'
 
 export const metadata: Metadata = {
   title: 'Pumpshie Pumps',
@@ -22,9 +21,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-background text-text antialiased">
-        <Providers>
-          {children}
-        </Providers>
+        {children}
       </body>
     </html>
   )

@@ -16,7 +16,7 @@ module.exports = {
     telegramBotToken: process.env.BOT_TOKEN,
     
     // Web App
-    webAppUrl: process.env.WEBAPP_URL || 'https://8264-103-214-63-137.ngrok-free.app',
+    webAppUrl: process.env.WEBAPP_URL || 'https://732d-103-214-63-177.ngrok-free.app',
 
     // Game Settings
     FREE_PLAYS_PER_DAY: 10,

@@ -6,7 +6,6 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import BottomNavigation from '@/components/BottomNavigation'
-import WalletLinkModal from '@/components/WalletLinkModal'
 
 interface GameHistoryEntry {
   date: string
@@ -14,7 +13,7 @@ interface GameHistoryEntry {
 }
 
 interface ProfileState {
-  projectName: string
+  projectName: string | null
   walletAddress: string | null
   displayNameGlobally: boolean
   currentProject: string | null
@@ -84,9 +83,8 @@ export default function Profile() {
   const router = useRouter()
   const { publicKey, connected } = useWallet()
   const [isLoading, setIsLoading] = useState(true)
-  const [showWalletModal, setShowWalletModal] = useState(!connected)
   const [profileData, setProfileData] = useState<ProfileState>({
-    projectName: '',
+    projectName: null,
     walletAddress: null,
     displayNameGlobally: false,
     currentProject: null,
@@ -96,18 +94,6 @@ export default function Profile() {
     isEditingName: false,
     gameHistory: []
   })
-
-  const handleLinkWallet = () => {
-    const webappUrl = process.env.NEXT_PUBLIC_WEBAPP_URL || 'https://8264-103-214-63-137.ngrok-free.app'
-    console.log(webappUrl)
-    const walletUrl = `${webappUrl}/wallet`
-    
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      window.Telegram.WebApp.openLink(walletUrl)
-    } else {
-      window.location.href = walletUrl
-    }
-  }
 
   useEffect(() => {
     const checkWalletAndLoadProfile = async () => {
@@ -156,24 +142,8 @@ export default function Profile() {
   if (!connected || !profileData.walletAddress) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-        <h1 
-          className="text-[#4ADE80] text-6xl font-black mb-16"
-          style={{ 
-            textShadow: `
-              0 0 20px rgba(74, 222, 128, 0.4),
-              0 0 40px rgba(74, 222, 128, 0.2),
-              2px 2px 4px rgba(74, 222, 128, 0.3)
-            `
-          }}
-        >
-          Connect Wallet
-        </h1>
+        <h1 className="text-4xl font-black text-[#4ADE80] mb-8">Connect Wallet</h1>
         <WalletMultiButton className="bg-[#4ADE80] hover:bg-[#3AAD60] text-white rounded-lg px-6 py-3" />
-        <WalletLinkModal 
-          isOpen={showWalletModal}
-          onClose={() => setShowWalletModal(false)}
-          onLinkWallet={handleLinkWallet}
-        />
       </div>
     )
   }
@@ -195,10 +165,45 @@ export default function Profile() {
     }
   }
 
+  const handleLinkWallet = () => {
+    const webappUrl = process.env.NEXT_PUBLIC_WEBAPP_URL || 'https://732d-103-214-63-177.ngrok-free.app'
+    const walletUrl = `${webappUrl}/wallet`
+    
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      window.Telegram.WebApp.openLink(walletUrl)
+    } else {
+      window.location.href = walletUrl
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         Loading...
+      </div>
+    )
+  }
+
+  if (!connected || !profileData.walletAddress) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
+        <h1 
+          className="text-[#4ADE80] text-6xl font-black mb-16"
+          style={{ 
+            textShadow: `
+              0 0 20px rgba(74, 222, 128, 0.4),
+              0 0 40px rgba(74, 222, 128, 0.2),
+              2px 2px 4px rgba(74, 222, 128, 0.3)
+            `
+          }}
+        >
+          Connect Wallet
+        </h1>
+        <div className="flex flex-col items-center gap-4">
+          <WalletMultiButton className="bg-[#4ADE80] hover:bg-[#3AAD60] text-white rounded-lg px-6 py-3 min-w-[200px] flex justify-center" />
+          {/* <span className="text-white text-lg">Select Wallet</span>
+          <span className="text-gray-400 text-base">Change wallet</span> */}
+        </div>
       </div>
     )
   }

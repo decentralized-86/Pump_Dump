@@ -28,7 +28,6 @@ interface TelegramWebApp {
     auth_date: string;
     hash: string;
   };
-  openLink: (url: string) => void;
 }
 
 declare global {
@@ -37,6 +36,4 @@ declare global {
       WebApp: TelegramWebApp;
     };
   }
-}
-
-export {}; 
+} 
