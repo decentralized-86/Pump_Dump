@@ -1,3 +1,4 @@
+'use client';
 import { useState } from 'react';
 import { shouldShowWalletConnect, getWalletStatus } from '../utils/wallet';
 import type { UserState } from '../utils/wallet';

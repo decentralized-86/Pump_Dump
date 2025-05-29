@@ -34,7 +34,7 @@ export default function WalletConnect() {
       setState({ step: 'verify', message: 'Preparing verification...' })
       
       // Get verification message from backend
-      const response = await fetch(`${API_URL}/verify-wallet/prepare?walletAddress=${publicKey.toBase58()}`)
+      const response = await fetch(`${API_URL}/api/wallet/verify-wallet/prepare?walletAddress=${publicKey.toBase58()}`)
       const data = await response.json()
 
       if (data.success) {
@@ -70,7 +70,7 @@ export default function WalletConnect() {
       // Verify with backend
       setState({ step: 'saving', message: 'Verifying wallet ownership...' })
       
-      const response = await fetch(`${API_URL}/verify-wallet`, {
+      const response = await fetch(`${API_URL}/api/wallet/verify-wallet`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
