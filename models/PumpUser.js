@@ -50,6 +50,7 @@ const PumpUserSchema = new mongoose.Schema({
   // Wallet & Access
   walletAddress: {
     type: String,
+    default: null,
     sparse: true
   },
   walletVerifiedAt: Date,

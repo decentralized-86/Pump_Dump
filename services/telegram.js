@@ -1,16 +1,37 @@
-const { Telegraf } = require('telegraf');
+const { Telegraf, session } = require('telegraf');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const logger = require('./logger');
 const gameService = require('./game');
 const PumpUser = require('../models/PumpUser');
+const Wallet = require('../models/Wallet')
+const { PublicKey } = require('@solana/web3.js');
+require('dotenv').config();
 
 const bot = new Telegraf(config.telegramBotToken);
+
+// Initialize session middleware to track user state
+bot.use(session());
 
 // Helper to generate game URL with auth token
 const generateGameUrl = (userId) => {
   const token = jwt.sign({ userId }, config.jwtSecret, { expiresIn: '24h' });
   return `${config.webAppUrl}/game?token=${token}`;
+};
+
+// Helper to validate Solana wallet address
+const isValidSolanaAddress = (address) => {
+  try {
+    // Check length (Solana addresses are 44 characters long)
+    if (address.length !== 44) {
+      return false;
+    }
+    // Check if it's a valid base58-encoded Solana public key
+    new PublicKey(address);
+    return true;
+  } catch (error) {
+    return false;
+  }
 };
 
 // Initialize bot commands
@@ -73,7 +94,8 @@ const initializeBot = () => {
       '/profile - View your profile\n' +
       '/leaderboard - View top players\n' +
       '/balance - Check remaining plays\n' +
-      '/buy - Purchase more plays\n\n' +
+      '/buy - Purchase more plays\n' +
+      '/setwallet - Set your wallet address\n\n' +
       '*How to Play*:\n' +
       '1. Get 10 free plays daily\n' +
       '2. Tweet about the game for extra plays\n' +
@@ -98,7 +120,7 @@ const initializeBot = () => {
         `Access Type: ${user.accessType}\n` +
         `Free Plays: ${user.freePlaysRemaining}\n` +
         `Current Project: ${user.currentProject?.name || 'None'}\n` +
-        `Wallet: ${user.walletAddress ? '✅ Connected' : '❌ Not Connected'}`;
+        `Wallet: ${user.walletAddress ? '✅ Connected (' + user.walletAddress + ')' : '❌ Not Connected'}`;
 
       await ctx.reply(profile, { parse_mode: 'Markdown' });
     } catch (error) {
@@ -175,6 +197,69 @@ const initializeBot = () => {
     } catch (error) {
       logger.error('Error in buy command:', error);
       await ctx.reply('Sorry, there was an error. Please try again later.');
+    }
+  });
+
+  // Set Wallet command
+  bot.command('setwallet', async (ctx) => {
+    try {
+      const user = await PumpUser.findOne({ tgId: ctx.from.id.toString() });
+      if (!user) {
+        return ctx.reply('Please start the game first using /start');
+      }
+
+      // Set session state to indicate the user is setting their wallet
+      ctx.session = ctx.session || {};
+      ctx.session.waitingForWallet = true;
+
+      await ctx.reply('💳 Please enter your Solana wallet address:');
+    } catch (error) {
+      logger.error('Error in setwallet command:', error);
+      await ctx.reply('Sorry, there was an error. Please try again later.');
+    }
+  });
+
+  // Handle wallet address input
+  bot.on('text', async (ctx) => {
+    try {
+      // Check if the user is in the wallet-setting state
+      if (ctx.session?.waitingForWallet) {
+        const walletAddress = ctx.message.text.trim();
+
+        // Validate the wallet address
+        if (!isValidSolanaAddress(walletAddress)) {
+          await ctx.reply('❌ Invalid Solana wallet address. Please provide a valid address (44 characters, base58-encoded).');
+          return;
+        }
+
+        // Find the user and update their wallet address
+        const user = await PumpUser.findOne({ tgId: ctx.from.id.toString() });
+        if (!user) {
+          await ctx.reply('Please start the game first using /start');
+          return;
+        }
+        let wallet = await Wallet.findOne({ walletAddress: walletAddress });
+        if(!wallet){
+          wallet = new Wallet({
+            userId: user._id,
+            walletAddress,
+            status: false,
+          });
+        }
+
+        await user.save();
+        logger.info(`Updated wallet address for user ${user.tgId}: ${walletAddress}`);
+
+        // Clear the session state
+        ctx.session.waitingForWallet = false;
+
+        await ctx.reply(`you have to send ${process.env.VALIDATE_WALLET_AMOUNT} to `);
+      }
+    } catch (error) {
+      logger.error('Error handling wallet address input:', error);
+      await ctx.reply('Sorry, there was an error. Please try again later.');
+      // Clear the session state in case of error
+      ctx.session.waitingForWallet = false;
     }
   });
 
@@ -261,6 +346,7 @@ const startBot = async () => {
       { command: 'leaderboard', description: 'View top players' },
       { command: 'balance', description: 'Check remaining plays' },
       { command: 'buy', description: 'Purchase more plays' },
+      { command: 'setwallet', description: 'Set your wallet address' },
       { command: 'help', description: 'Show help' }
     ]);
     logger.info('Bot commands initialized');
@@ -298,4 +384,4 @@ module.exports = {
   bot,
   startBot,
   generateGameUrl
-}; 
+};

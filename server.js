@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
+const {startListener } = require('./services/walletListener');
 
 // Import models first
 require('./models');
@@ -54,6 +55,8 @@ const startServer = async () => {
     console.log('Starting Telegram bot...');
     telegramService.startBot();
     logger.info('Telegram bot started');
+
+    startListener()
 
     const PORT = process.env.HOST_PORT || 3000;
 
