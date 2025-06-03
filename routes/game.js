@@ -13,6 +13,7 @@ const globalDayService = require("../services/globalDay");
 const twitterService = require("../services/twitter");
 const cache = require("../services/cache");
 const rateLimit = require("../middlewares/rateLimit");
+const { authenticateToken } = require("../utils/gen");
 
 const router = express.Router();
 
@@ -87,15 +88,19 @@ router.get("/rank-me", async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
-  const user = req.bean.user;
+router.get("/", authenticateToken,async (req, res) => {
+  console.log("middleware second")
+  const user = req.user;
+  console.log("here", user)
+  const userData = await PumpUser.findOne({tgId:user.userId})
+  console.log(userData)
   const ms = await remainTimeMs(user.tgId);
   const resp = {
     telegramId: user.userId,
-    maxScore: user.maxScore || 0,
-    maxTime: user.maxTime || 0,
+    maxScore: userData.highestScore || 0,
+    maxTime: userData.maxTime || 0,
     remainTime: ms,
-    avatar: user.avatar,
+    avatar: userData.avatar,
   };
   return res.json(resp);
 });
@@ -276,8 +281,8 @@ router.post("/update-wallet", async (req, res) => {
   }
 });
 
-router.post("/update-play", async (req, res) => {
-  const user = req.bean.user;
+router.post("/update-play", authenticateToken ,async (req, res) => {
+  const user = req.user;
   const updateSchema = Joi.object({
     score: Joi.number().required(),
     playTime: Joi.number().required(),

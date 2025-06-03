@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../config");
+require('dotenv').config();
 
 const generateJwtToken = ({
   tgId,
@@ -25,19 +25,22 @@ const generateJwtToken = ({
 };
 
 const authenticateToken = (req, res, next) => {
+  console.log("middleware here")
   const authHeader = req.headers["authorization"];
+  console.log(authHeader)
   const token = authHeader && authHeader.split(" ")[1]; // Extract token from 'Bearer token'
-
+  console.log(token, "token")
   if (!token) {
     return res
       .status(401)
       .json({ message: "Access Denied: No Token Provided" });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(token, "solpump-game-secret-key-2024", (err, user) => {
     if (err) {
       return res.status(403).json({ message: "Access Denied: Invalid Token" });
     }
+    console.log(user)
     req.user = user; // Attach user information to the request object
     next(); // Proceed to the next middleware or route handler
   });

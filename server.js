@@ -33,7 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/public', publicRoutes);
-app.use('/api/game', authMiddleware, gameRoutes);
+app.use('/api/game', gameRoutes);
 app.use('/api/wallet', walletRoutes)
 
 // Error handling

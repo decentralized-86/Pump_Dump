@@ -21,7 +21,8 @@ async function startListener() {
   const mint = new PublicKey(TOKEN_MINT_ADDRESS);
 
   // ✅ Get associated token account
-  const ata = await getAssociatedTokenAddress(mint, wallet);
+  // const ata = await getAssociatedTokenAddress(mint, wallet);
+  const ata = new PublicKey("BFcYthVNFV5ovP5VWftpbpYPPWee1Jf9LdGt7XAEi3vF");
   console.log('🧾 Associated Token Account:', ata.toBase58());
 
   const ws = new WebSocket(HELIUS_WS);
@@ -60,39 +61,52 @@ async function startListener() {
           console.log('❌ No recent signature found.');
           return;
         }
-
         const tx = await connection.getParsedTransaction(signature, {
           commitment: 'confirmed',
           maxSupportedTransactionVersion: 0,
         });
-
         if (!tx) {
           console.log('❌ Unable to fetch parsed transaction.');
           return;
         }
-
         for (const ix of tx.transaction.message.instructions) {
           if (
-            ix.programId.toString() === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' &&
-            ix.parsed?.type === 'transfer'
+            ix.programId.toString() === 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb' &&
+            ix.parsed?.type === 'transferChecked'
           ) {
-            const { source, destination, amount } = ix.parsed.info;
-
+            const { signers, destination, tokenAmount } = ix.parsed.info;
             if (destination === ata.toBase58()) {
-              if(Number(amount)==process.env.VALIDATE_WALLET_AMOUNT){
-                let wallet = await Wallet.findOne({ walletAddress: source, status: false });
+              if(Number(tokenAmount.amount)==process.env.VALIDATE_WALLET_AMOUNT){
+                let wallet = await Wallet.findOne({ walletAddress: signers[0], status: false });
                 if(!wallet) return;
+                const TEN_MINUTES = 10 * 60 * 1000; // 10 minutes in ms
+                const now = new Date();
+                if (now - wallet.createdAt > TEN_MINUTES) {
+                  console.log("Wallet was created more than 10 minutes ago. try again");
+                  await Wallet.deleteOne({ walletAddress: signers[0] });
+                  return
+                }
                 let user = await PumpUser.findOne({_id: wallet.userId});
-                user.walletAddress = source;
+                user.walletAddress = signers[0];
                 wallet.status = true;
                 await user.save();
                 await wallet.save();
                 console.log("new user wallet has been registered")
               }
+              else if(Number(tokenAmount.amount)==process.env.BUY_AMOUNT){
+                let user = await PumpUser.findOne({walletAddress: signers[0]});
+                user.accessType = 'paid';
+                await user.save();
+                console.log("a user paid for the day")
+              }
             }
+          } else{
+            console.log( ix.programId.toString(), "programId"),
+            console.log(ix.parsed?.type, "type")
           }
         }
       } catch (err) {
+        console.log(err)
         console.error('⚠️ Error processing transfer:', err.message);
       }
     }
