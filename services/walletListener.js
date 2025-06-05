@@ -8,6 +8,7 @@ const { getAssociatedTokenAddress } = require('@solana/spl-token');
 const PumpUser = require('../models/PumpUser');
 const Wallet = require('../models/Wallet')
 require('dotenv').config();
+const { bot } = require('./telegram');
 
 // ✅ CONFIGURE THESE
 const HELIUS_RPC = process.env.HELIUS_RPC;
@@ -91,6 +92,7 @@ async function startListener() {
                 wallet.status = true;
                 await user.save();
                 await wallet.save();
+                await bot.telegram.sendMessage(user.tgId, "✅ Your wallet has been verified and linked successfully! You can now play and earn rewards.")
                 console.log("new user wallet has been registered")
               }
               else if(Number(tokenAmount.amount)==process.env.BUY_AMOUNT){

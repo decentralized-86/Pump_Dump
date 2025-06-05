@@ -1,5 +1,6 @@
 const express = require("express");
 const PumpUser = require("../models/PumpUser");
+const GameDay = require('../models/GameDay');
 const GameSession = require("../models/GameSession");
 const logger = require("../services/logger");
 const PumpHist = require("../models/PumpHist");
@@ -17,28 +18,26 @@ const { authenticateToken } = require("../utils/gen");
 
 const router = express.Router();
 
-router.get("/rank-me", async (req, res) => {
-  const user = req.bean.user;
+router.get("/rank-me", authenticateToken,async (req, res) => {
+  const userData = req.user;
   try {
-    const cacheKey = cache.generateKey('rank', user.tgId);
-    
-    const rankData = await cache.getOrSet(cacheKey, async () => {
+    const user = await PumpUser.findOne({tgId:userData.userId})
     const userRank = await PumpUser.aggregate([
       {
         $sort: {
-          maxScore: -1,
+          highestScore: -1, // ✅ Use correct field
         },
       },
       {
         $group: {
           _id: null,
-          users: { $push: { userId: "$userId", score: "$maxScore" } },
+          users: { $push: { userId: "$_id", score: "$highestScore" } },
         },
       },
       {
         $project: {
           rank: {
-            $indexOfArray: ["$users.userId", user.userId],
+            $indexOfArray: ["$users.userId", user._id], // ✅ match by MongoDB _id
           },
         },
       },
@@ -69,38 +68,73 @@ router.get("/rank-me", async (req, res) => {
       projectId: user.projectId,
     });
 
-      return {
-      userId: user.userId,
-        userRank: userRank[0]?.rank + 1 || 1,
-        projectRank: projectRank[0]?.rank + 1 || 1,
-      userScore: user.maxScore,
+    const resData =  {
+      userId: user.tgId,
+      userRank: userRank[0]?.rank + 1 || 1,
+      projectRank: projectRank[0]?.rank + 1 || 1,
+      userScore: user.highestScore,
       projectId: user.projectId || null,
       projectName: userProject?.name,
       projectPoints: userProject?.points || 0,
       avatar: user.avatar,
-      };
-    }, cache.DURATIONS.SHORT);
-
-    return res.json(rankData);
+    }
+    console.log(resData, 'resData')
+    return res.json(resData)
   } catch (error) {
     console.error("Error calculating rank:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error",});
   }
 });
 
+router.get('/rank-players', async(req,res)=>{
+  const leaderboard = await GameDay.aggregate([
+    {
+      $sort: {
+        score: -1,     // Sort by highest score
+        playTime: 1    // If score is the same, less playTime is better
+      }
+    },
+    {
+      $lookup: {
+        from: 'pumpusers',              // collection name in MongoDB (must be lowercase plural of the model)
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'user'
+      }
+    },
+    {
+      $unwind: '$user'
+    },
+    {
+      $project: {
+        _id: 0,
+        userId: 1,
+        score: 1,
+        playTime: 1,
+        displayName: '$user.displayName',
+        username: '$user.username',
+        avatar: '$user.avatar'
+      }
+    },
+    {
+      $limit: 10  // ✅ Top 10 leaderboard entries only
+    }
+  ]);
+  return res.json(leaderboard)
+  
+})
+
 router.get("/", authenticateToken,async (req, res) => {
-  console.log("middleware second")
   const user = req.user;
-  console.log("here", user)
   const userData = await PumpUser.findOne({tgId:user.userId})
-  console.log(userData)
   const ms = await remainTimeMs(user.tgId);
+  const gameDay = await GameDay.findOne().sort({ score: -1 });
   const resp = {
     telegramId: user.userId,
-    maxScore: userData.highestScore || 0,
+    maxScore: gameDay.score || 0,
     maxTime: userData.maxTime || 0,
     remainTime: ms,
-    avatar: userData.avatar,
+    avatar: user.avatar,
   };
   return res.json(resp);
 });
@@ -200,26 +234,9 @@ router.get("/search-projects", async (req, res) => {
       },
     ]);
 
-    const response = await fetch(
-      `https://frontend-api-v2.pump.fun/coins?offset=0&limit=100&sort=market_cap&order=DESC&includeNsfw=true&searchTerm=${searchProject}`
-    );
-    const externalProjects = await response.json();
-    // only filter out the projects that are not in the internal projects
-    externalProjects.filter((v) => {
-      return projects.findIndex((p) => p.walletAddress === v.mint) < 0;
-    });
-
-    const combinedProjects = projects.concat(
-      externalProjects.map((p) => ({
-        name: p.name,
-        points: 0,
-        walletAddress: p.mint,
-        imageUrl: p.image_uri,
-      }))
-    );
-
+    console.log(projects)
     return res.json({
-      projects: combinedProjects,
+      projects: projects,
     });
   } catch (error) {
     console.error("Error searching projects:", error);
@@ -283,6 +300,7 @@ router.post("/update-wallet", async (req, res) => {
 
 router.post("/update-play", authenticateToken ,async (req, res) => {
   const user = req.user;
+  const userData = await PumpUser.findOne({tgId:user.userId})
   const updateSchema = Joi.object({
     score: Joi.number().required(),
     playTime: Joi.number().required(),
@@ -295,24 +313,30 @@ router.post("/update-play", authenticateToken ,async (req, res) => {
       return res.json({
         success: true,
         message: "Score updated successfully",
-        remainTime: await remainTimeMs(user.tgId),
+        remainTime: await remainTimeMs(user.userId),
       });
     }
     const project = await PumpProject.findOne({
-      projectId: user.projectId,
+      projectId: userData.projectId,
     });
     if (project) {
       project.points += calculatePoint(score) * (project.boostMulti || 1);
       await project.save();
     }
     await PumpUser.updateOne(
-      { tgId: user.tgId },
+      { tgId: user.userId },
       {
-        $set: { maxScore: Math.max(user.maxScore, score), maxTime: playTime },
+        $set: { highestScore: Math.max(userData.highestScore, score), totalPlayTime: userData.totalPlayTime+playTime, mcPoints: userData.mcPoints + score },
       }
     );
+    const gameDay = new GameDay({
+      userId: userData._id,
+      score: score,
+      playTime: playTime
+    });
+    await gameDay.save()
     const hist = new PumpHist({
-      tgId: user.tgId,
+      tgId: user.userId,
       score,
       playTime,
     });
@@ -320,23 +344,23 @@ router.post("/update-play", authenticateToken ,async (req, res) => {
     return res.json({
       success: true,
       message: "Score updated successfully",
-      remainTime: await remainTimeMs(user.tgId),
+      remainTime: await remainTimeMs(user.userId),
     });
   } catch (err) {
     logger.error(err);
     return res.status(500).json({
-      error: "Internal Server Error",
+      error: err,
     });
   }
 });
 
-router.get("/history", async (req, res) => {
+router.get("/history", authenticateToken,async (req, res) => {
   try {
-    const user = req.bean.user;
+    const user = req.user;
     const query = [
       {
         $match: {
-          tgId: user.tgId,
+          tgId: user.userId,
         },
       },
       {
@@ -387,10 +411,13 @@ router.get("/history", async (req, res) => {
   }
 });
 
-router.get("/profile", async (req, res) => {
+router.get("/profile",authenticateToken ,async (req, res) => {
   try {
-    const user = req.bean.user;
-    const cacheKey = cache.generateKey('profile', user.tgId);
+    const userData = req.user;
+    const user = await PumpUser.findOne({tgId:userData.userId});
+    // return userData;
+
+    const cacheKey = cache.generateKey('profile', user.userId);
     
     const profile = await cache.getOrSet(cacheKey, async () => {
     const project = await PumpProject.findOne({
@@ -425,6 +452,12 @@ router.get("/profile", async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+router.get("/profileUser",authenticateToken ,async (req, res) => {
+  let userheader = req.user;
+  let user = await PumpUser.findOne({tgId:userheader.userId})
+  return user
+})
 
 // New routes for wallet and game functionality
 router.post("/prepare-wallet-verification", async (req, res) => {
@@ -794,15 +827,30 @@ router.get("/projects/search", async (req, res) => {
 });
 
 // Get user profile
-router.get('/profile', async (req, res) => {
+router.get('/profileData', authenticateToken, async (req, res) => {
     try {
         const user = req.user;
+        const userData = await PumpUser.findOne({tgId: user.userId})
+        const now = new Date();
+
+        // Create a new Date object for tomorrow at 00:00 (midnight)
+        const midnight = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 1, // Tomorrow
+          0, 0, 0, 0 // At 00:00:00.000
+        );
+
+        // Return the difference in milliseconds
+        const remainingTime = midnight - now;
         res.json({
-            tgId: user.tgId,
-            username: user.username,
-            displayName: user.displayName,
-            freePlaysRemaining: user.freePlaysRemaining,
-            walletAddress: user.walletAddress
+            tgId: userData.tgId,
+            username: userData.username,
+            displayName: userData.displayName,
+            freePlaysRemaining: userData.freePlaysRemaining,
+            walletAddress: userData.walletAddress,
+            maxScore: userData.mcPoints,
+            remainTime: remainingTime
         });
     } catch (error) {
         logger.error('Error fetching profile:', error);

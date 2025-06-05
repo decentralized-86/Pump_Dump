@@ -10,22 +10,22 @@ const PumpProjectSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  description: {
-    type: String
-  },
+  // description: {
+  //   type: String
+  // },
   imageUrl: {
     type: String,
     required: true
   },
-  website: {
-    type: String
-  },
-  twitter: {
-    type: String
-  },
-  telegram: {
-    type: String
-  },
+  // website: {
+  //   type: String
+  // },
+  // twitter: {
+  //   type: String
+  // },
+  // telegram: {
+  //   type: String
+  // },
   
   // Project Stats
   totalPoints: {
@@ -36,57 +36,57 @@ const PumpProjectSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  rank: {
-    type: Number,
-    default: 0
-  },
+  // rank: {
+  //   type: Number,
+  //   default: 0
+  // },
   
   // Project Configuration
-  walletAddress: {
+  tokenAddress: {
     type: String,
     required: true
   },
-  minTokensRequired: {
-    type: Number,
-    default: 100000 // 100k PUMPSHIE tokens
-  },
+  // minTokensRequired: {
+  //   type: Number,
+  //   default: 100000 // 100k PUMPSHIE tokens
+  // },
   
   // Daily Stats
-  currentGlobalDayId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'GlobalDay'
-  },
-  dailyPoints: {
-    type: Number,
-    default: 0
-  },
-  dailyHighScore: {
-    score: Number,
-    userId: String,
-    achievedAt: Date
-  },
+  // currentGlobalDayId: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'GlobalDay'
+  // },
+  // dailyPoints: {
+  //   type: Number,
+  //   default: 0
+  // },
+  // dailyHighScore: {
+  //   score: Number,
+  //   userId: String,
+  //   achievedAt: Date
+  // },
   
   // Historical Data
-  totalGamesPlayed: {
-    type: Number,
-    default: 0
-  },
-  historicalHighScore: {
-    score: Number,
-    userId: String,
-    achievedAt: Date
-  },
+  // totalGamesPlayed: {
+  //   type: Number,
+  //   default: 0
+  // },
+  // historicalHighScore: {
+  //   score: Number,
+  //   userId: String,
+  //   achievedAt: Date
+  // },
   
   // Active Players
-  activePlayers: [{
-    userId: String,
-    joinedAt: Date,
-    totalPoints: Number,
-    dailyPoints: {
-      type: Number,
-      default: 0
-    }
-  }],
+  // activePlayers: [{
+  //   userId: String,
+  //   joinedAt: Date,
+  //   totalPoints: Number,
+  //   dailyPoints: {
+  //     type: Number,
+  //     default: 0
+  //   }
+  // }],
   
   isActive: {
     type: Boolean,
