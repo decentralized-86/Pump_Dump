@@ -41,10 +41,16 @@ const PumpUserSchema = new mongoose.Schema({
   },
   
   // Project/Team Data
-  currentProject: {
-    projectId: String,
-    name: String,
-    joinedAt: Date
+  projectId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'PumpProject',
+    required: false,
+  },
+
+  projectTokenAddress: {
+    type: String,
+    default: null,
+    requried: false
   },
   
   // Wallet & Access
@@ -146,7 +152,6 @@ const PumpUserSchema = new mongoose.Schema({
 
 // Indexes
 PumpUserSchema.index({ mcPoints: -1 }); // For leaderboard queries
-PumpUserSchema.index({ "currentProject.projectId": 1 }); // For project-based queries
 PumpUserSchema.index({ walletAddress: 1 }); // For wallet verification
 PumpUserSchema.index({ currentGlobalDayId: 1 }); // For global day queries
 

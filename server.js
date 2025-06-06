@@ -10,7 +10,8 @@ const {startListener } = require('./services/walletListener');
 // Import models first
 require('./models');
 
-const { scheduleGlobalDayReset, schedulePeriodicCheck } = require('./cron/globalDayReset');
+// const { scheduleGlobalDayReset, schedulePeriodicCheck } = require('./cron/globalDayReset');
+const scheduleDailyReset = require('./cron/dailyReset')
 const gameRoutes = require('./routes/game');
 const publicRoutes = require('./routes/public');
 const walletRoutes = require('./routes/wallet')
@@ -48,8 +49,9 @@ const startServer = async () => {
     console.log('Mongo connected, HOST_PORT:', process.env.HOST_PORT);
 
     console.log('Scheduling cron jobs...');
-    scheduleGlobalDayReset();
-    schedulePeriodicCheck();
+    // scheduleGlobalDayReset();
+    // schedulePeriodicCheck();
+    scheduleDailyReset();
     logger.info('Global day cron jobs initialized');
 
     console.log('Starting Telegram bot...');

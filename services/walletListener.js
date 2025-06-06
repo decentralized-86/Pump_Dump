@@ -77,7 +77,7 @@ async function startListener() {
           ) {
             const { signers, destination, tokenAmount } = ix.parsed.info;
             if (destination === ata.toBase58()) {
-              if(Number(tokenAmount.amount)==process.env.VALIDATE_WALLET_AMOUNT){
+              if(Number(tokenAmount.amount)==process.env.VALIDATE_WALLET_AMOUNT*(10**9)){
                 let wallet = await Wallet.findOne({ walletAddress: signers[0], status: false });
                 if(!wallet) return;
                 const TEN_MINUTES = 10 * 60 * 1000; // 10 minutes in ms

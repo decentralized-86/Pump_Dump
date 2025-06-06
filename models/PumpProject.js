@@ -2,20 +2,19 @@ const mongoose = require("mongoose");
 
 const PumpProjectSchema = new mongoose.Schema({
   projectId: {
-    required: true,
-    unique: true,
+    required: false,
     type: String,
   },
   name: {
     type: String,
-    required: true
+    required: false
   },
   // description: {
   //   type: String
   // },
   imageUrl: {
     type: String,
-    required: true
+    required: false
   },
   // website: {
   //   type: String
@@ -109,49 +108,38 @@ PumpProjectSchema.index({ isActive: 1 });
 PumpProjectSchema.index({ currentGlobalDayId: 1, dailyPoints: -1 });
 
 // Methods
-PumpProjectSchema.methods.resetDaily = async function(newGlobalDayId) {
-  // Store historical high score if current daily is higher
-  if (this.dailyHighScore && (!this.historicalHighScore || this.dailyHighScore.score > this.historicalHighScore.score)) {
-    this.historicalHighScore = this.dailyHighScore;
-  }
-  
-  // Reset daily stats
-  this.dailyPoints = 0;
-  this.dailyHighScore = null;
-  this.currentGlobalDayId = newGlobalDayId;
-  this.playerCount = 0;
-  
-  // Reset daily points for active players
-  this.activePlayers.forEach(player => {
-    player.dailyPoints = 0;
-  });
-  
-  await this.save();
-};
+// PumpProjectSchema.methods.resetDaily = async function(newGlobalDayId) {
+//   // Store historical high score if current daily is higher
 
-PumpProjectSchema.methods.addPoints = async function(userId, points) {
-  // Update total points
-  this.totalPoints += points;
   
-  // Update daily points
-  this.dailyPoints += points;
+//   // Reset daily stats
   
-  // Update or add player
-  let player = this.activePlayers.find(p => p.userId === userId);
-  if (player) {
-    player.totalPoints += points;
-    player.dailyPoints += points;
-  } else {
-    this.activePlayers.push({
-      userId,
-      joinedAt: new Date(),
-      totalPoints: points,
-      dailyPoints: points
-    });
-    this.playerCount++;
-  }
+//   // Reset daily points for active players
   
-  await this.save();
-};
+//   await this.save();
+// };
+
+// PumpProjectSchema.methods.addPoints = async function(userId, points) {
+//   // Update total points
+//   this.totalPoints += points;
+  
+//   // Update daily points
+//   this.dailyPoints += points;
+  
+//   // Update or add player
+//   let player = this.activePlayers.find(p => p.userId === userId);
+//   if (player) {
+//     player.totalPoints += points;
+//   } else {
+//     this.activePlayers.push({
+//       userId,
+//       joinedAt: new Date(),
+//       totalPoints: points,
+//     });
+//     this.playerCount++;
+//   }
+  
+//   await this.save();
+// };
 
 module.exports = mongoose.model("PumpProject", PumpProjectSchema);

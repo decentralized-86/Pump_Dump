@@ -65,7 +65,7 @@ router.get("/rank-me", authenticateToken,async (req, res) => {
     ]);
 
     const userProject = await PumpProject.findOne({
-      projectId: user.projectId,
+      tokenAddress: user.projectTokenAddress,
     });
 
     const resData =  {
@@ -75,10 +75,9 @@ router.get("/rank-me", authenticateToken,async (req, res) => {
       userScore: user.highestScore,
       projectId: user.projectId || null,
       projectName: userProject?.name,
-      projectPoints: userProject?.points || 0,
+      projectPoints: userProject?.totalPoints || 0,
       avatar: user.avatar,
     }
-    console.log(resData, 'resData')
     return res.json(resData)
   } catch (error) {
     console.error("Error calculating rank:", error);
@@ -87,41 +86,66 @@ router.get("/rank-me", authenticateToken,async (req, res) => {
 });
 
 router.get('/rank-players', async(req,res)=>{
+  
   const leaderboard = await GameDay.aggregate([
     {
-      $sort: {
-        score: -1,     // Sort by highest score
-        playTime: 1    // If score is the same, less playTime is better
+      $group: {
+        _id: "$userId",
+        score: { $max: "$score" },
+        playTime: { $first: "$playTime" } // Optional
       }
     },
     {
       $lookup: {
-        from: 'pumpusers',              // collection name in MongoDB (must be lowercase plural of the model)
-        localField: 'userId',
-        foreignField: '_id',
-        as: 'user'
+        from: "pumpusers",
+        localField: "_id",
+        foreignField: "_id",
+        as: "user"
       }
     },
+    { $unwind: "$user" },
     {
-      $unwind: '$user'
+      $lookup: {
+        from: "pumpprojects",
+        localField: "user.projectId",
+        foreignField: "_id",
+        as: "project"
+      }
     },
+    { $unwind: { path: "$project", preserveNullAndEmptyArrays: true } },
     {
       $project: {
         _id: 0,
-        userId: 1,
+        userId: "$_id",
         score: 1,
         playTime: 1,
-        displayName: '$user.displayName',
-        username: '$user.username',
-        avatar: '$user.avatar'
+        displayName: "$user.displayName",
+        username: "$user.username",
+        avatar: "$user.avatar",
+        projectTokenAddress: "$user.projectTokenAddress",
+        totalPoints: "$project.totalPoints",
+        projectName: "$project.name"
       }
     },
     {
-      $limit: 10  // ✅ Top 10 leaderboard entries only
-    }
+      $sort: {
+        score: -1,
+        playTime: -1
+      }
+    },
+    { $limit: 10 }
   ]);
+  
+  console.log(leaderboard, "leaderboard")
   return res.json(leaderboard)
   
+});
+
+router.get('/rank-projects',async (req,res)=>{
+  const projects = await PumpProject.find({})
+  .sort({ totalPoints: -1 })
+  .limit(10);
+  return res.json(projects)
 })
 
 router.get("/", authenticateToken,async (req, res) => {
@@ -132,7 +156,7 @@ router.get("/", authenticateToken,async (req, res) => {
   const resp = {
     telegramId: user.userId,
     maxScore: gameDay.score || 0,
-    maxTime: userData.maxTime || 0,
+    maxTime: gameDay.playTime || 0,
     remainTime: ms,
     avatar: user.avatar,
   };
@@ -175,22 +199,36 @@ router.get("/get-invites", async (req, res) => {
   return res.json(users);
 });
 
-router.post("/update-project", async (req, res) => {
-  const user = req.bean.user;
+router.post("/update-project", authenticateToken,async (req, res) => {
+  const userData = req.user;
+  let user = await PumpUser.findOne({tgId: userData.userId})
 
   const updateSchema = Joi.object({
-    projectId: Joi.string().required(),
+    tokenAddress: Joi.string().required(),
   });
   const { error } = updateSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
+  let project = await PumpProject.findOne({tokenAddress:req.body.tokenAddress})
 
-  if (user.projectId === req.body.projectId) {
+  if (user?.projectTokenAddress === req.body.tokenAddress) {
     return res.json({
       success: false,
       message: "You are already part of that project.",
     });
   }
-  user.projectId = req.body.projectId;
+  user.projectTokenAddress = req.body.tokenAddress;
+  if(!project){
+    project = new PumpProject({
+      projectId: req.body.tokenAddress,
+      tokenAddress: req.body.tokenAddress,
+      playerCount:1
+    })
+    await project.save()
+  }else {
+    project.playerCount = project.playerCount+1;
+    await project.save()
+  }
+  user.projectId = project._id
   await user.save();
   return res.json({
     success: true,
@@ -244,13 +282,35 @@ router.get("/search-projects", async (req, res) => {
   }
 });
 
-router.get("/referral-data", async (req, res) => {
-  const user = req.bean.user;
-  const ms = await remainTimeMs(user.tgId);
+router.get("/referral-data", authenticateToken,async (req, res) => {
+  const userData = req.user;
+  let user = await PumpUser.findOne({tgId: userData.userId})
+  if(!user.inviteCode){
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let inviteCode = '';
+    for (let i = 0; i < 8; i++) {
+      inviteCode += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    user.inviteCode = inviteCode;
+    
+    await user.save()
+  }
+  console.log(user.inviteCode, "inviteCode")
+  const now = new Date();
+
+  // Create a new Date object for tomorrow at 00:00 (midnight)
+  const midnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1, // Tomorrow
+    0, 0, 0, 0 // At 00:00:00.000
+  );
+
+  const remainingTime = midnight - now;
   return res.json({
-    referralCode: user.tgId,
-    remainTime: ms,
-    inviteLink: user.inviteLink,
+    referralCode: user.inviteCode,
+    remainTime: remainingTime,
+    inviteLink: user.inviteCode,
   });
 });
 
@@ -317,16 +377,16 @@ router.post("/update-play", authenticateToken ,async (req, res) => {
       });
     }
     const project = await PumpProject.findOne({
-      projectId: userData.projectId,
+      tokenAddress: userData.projectTokenAddress,
     });
     if (project) {
-      project.points += calculatePoint(score) * (project.boostMulti || 1);
+      project.totalPoints += score;
       await project.save();
     }
     await PumpUser.updateOne(
       { tgId: user.userId },
       {
-        $set: { highestScore: Math.max(userData.highestScore, score), totalPlayTime: userData.totalPlayTime+playTime, mcPoints: userData.mcPoints + score },
+        $set: { highestScore: Math.max(userData.highestScore, score), totalPlayTime: userData.totalPlayTime+playTime, mcPoints: userData.mcPoints + score, freePlaysRemaining: userData.freePlaysRemaining - 1 },
       }
     );
     const gameDay = new GameDay({
@@ -830,7 +890,8 @@ router.get("/projects/search", async (req, res) => {
 router.get('/profileData', authenticateToken, async (req, res) => {
     try {
         const user = req.user;
-        const userData = await PumpUser.findOne({tgId: user.userId})
+        const userData = await PumpUser.findOne({tgId: user.userId});
+        const project = await PumpProject.findOne({tokenAddress:userData.projectTokenAddress})
         const now = new Date();
 
         // Create a new Date object for tomorrow at 00:00 (midnight)
@@ -850,6 +911,8 @@ router.get('/profileData', authenticateToken, async (req, res) => {
             freePlaysRemaining: userData.freePlaysRemaining,
             walletAddress: userData.walletAddress,
             maxScore: userData.mcPoints,
+            tokenAddress: userData.projectTokenAddress,
+            projectPoints: project.totalPoints,
             remainTime: remainingTime
         });
     } catch (error) {
