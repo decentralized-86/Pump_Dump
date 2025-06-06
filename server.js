@@ -7,7 +7,6 @@ const morgan = require('morgan');
 const compression = require('compression');
 const {startListener } = require('./services/walletListener');
 
-// Import models first
 require('./models');
 
 // const { scheduleGlobalDayReset, schedulePeriodicCheck } = require('./cron/globalDayReset');
