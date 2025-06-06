@@ -2,6 +2,11 @@ const express = require("express");
 const PumpUser = require("../models/PumpUser");
 const PumpProject = require("../models/PumpProject");
 const fetch = require("node-fetch");
+const jwt = require('jsonwebtoken');
+const config = require('../config');
+const logger = require('../services/logger');
+const walletService = require('../services/wallet');
+const rateLimit = require('../middlewares/rateLimit');
 
 const router = express.Router();
 
@@ -135,6 +140,84 @@ router.get("/rank-players", async (req, res) => {
     },
   ]);
   return res.json(topPlayers);
+});
+
+// Health check endpoint
+router.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+    });
+});
+
+// Telegram authentication
+router.post('/auth/telegram', rateLimit('auth'), async (req, res) => {
+    try {
+        const { message, signature, tgId, username, displayName } = req.body;
+
+        if (!message || !signature || !tgId) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+
+        // For testing purposes, we'll skip signature verification
+        // In production, you should verify the signature
+        
+        // Find or create user
+        let user = await PumpUser.findOne({ tgId });
+        if (!user) {
+            user = new PumpUser({
+                tgId,
+                username,
+                displayName,
+                freePlaysRemaining: 10
+            });
+            await user.save();
+        }
+
+        // Generate JWT
+        const token = jwt.sign(
+            { userId: user.tgId },
+            config.jwtSecret,
+            { expiresIn: '24h' }
+        );
+
+        res.json({
+            token,
+            user: {
+                tgId: user.tgId,
+                username: user.username,
+                displayName: user.displayName,
+                freePlaysRemaining: user.freePlaysRemaining
+            }
+        });
+
+    } catch (error) {
+        logger.error('Authentication error:', error);
+        res.status(500).json({ message: 'Authentication failed' });
+    }
+});
+
+// Wallet verification
+router.post('/verify-wallet', rateLimit('wallet'), async (req, res) => {
+    try {
+        const { walletAddress, signature, message } = req.body;
+
+        if (!walletAddress || !signature || !message) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+
+        const isValid = await walletService.verifyWalletConnection(signature, walletAddress);
+        if (!isValid) {
+            return res.status(401).json({ message: 'Invalid wallet signature' });
+        }
+
+        res.json({ verified: true });
+
+    } catch (error) {
+        logger.error('Wallet verification error:', error);
+        res.status(500).json({ message: 'Wallet verification failed' });
+    }
 });
 
 module.exports = router;

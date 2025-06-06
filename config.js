@@ -1,14 +1,31 @@
-const dotenv = require("dotenv");
-const path = require("path");
-
-dotenv.config({ path: path.resolve(__dirname, ".env") });
+require('dotenv').config();
 
 module.exports = {
-  BOT_TOKEN: process.env.BOT_TOKEN,
-  WEBAPP_URL: process.env.WEBAPP_URL,
-  AUTH_KEY: process.env.AUTH_KEY,
-  JWT_KEY_ID: process.env.JWT_KEY_ID,
-  JWT_SECRET: process.env.JWT_SECRET,
-  MONGO_URL: process.env.MONGO_URL,
-  HOST_PORT: process.env.HOST_PORT,
+    // MongoDB
+    mongoUrl: process.env.MONGO_URL || 'mongodb+srv://poonampradeepyadav999:W4VyFthweQI1hVRm@cluster0.ckizrzq.mongodb.net/pumpshie',
+
+    // JWT
+    jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
+
+    // Solana
+    solanaRpcUrl: process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
+    PUMPSHIE_TOKEN_ADDRESS: process.env.PUMPSHIE_TOKEN_ADDRESS,
+    MIN_TOKEN_BALANCE: process.env.MIN_TOKEN_BALANCE || '1000000', // 1 PUMPSHIE
+
+    // Telegram
+    telegramBotToken: process.env.BOT_TOKEN,
+    
+    // Web App
+    webAppUrl: process.env.WEBAPP_URL || 'https://732d-103-214-63-177.ngrok-free.app',
+
+    // Game Settings
+    FREE_PLAYS_PER_DAY: 10,
+    POINTS_PER_PLAY: 100,
+    
+    // Rate Limiting
+    rateLimits: {
+        auth: { window: 300, max: 5 },      // 5 requests per 5 minutes
+        play: { window: 60, max: 10 },      // 10 requests per minute
+        tweet: { window: 300, max: 3 }      // 3 requests per 5 minutes
+    }
 };

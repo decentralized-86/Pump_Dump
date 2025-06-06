@@ -1,39 +1,47 @@
 const express = require("express");
 const PumpUser = require("../models/PumpUser");
+const GameDay = require('../models/GameDay');
+const GameSession = require("../models/GameSession");
 const logger = require("../services/logger");
 const PumpHist = require("../models/PumpHist");
 const Joi = require("joi");
 const PumpProject = require("../models/PumpProject");
 const { calculatePoint } = require("../utils/calc");
 const { remainTimeMs } = require("../services/remain");
+const walletService = require("../services/wallet");
+const gameService = require("../services/game");
+const globalDayService = require("../services/globalDay");
+const twitterService = require("../services/twitter");
+const cache = require("../services/cache");
+const rateLimit = require("../middlewares/rateLimit");
+const { authenticateToken } = require("../utils/gen");
 
 const router = express.Router();
 
-router.get("/rank-me", async (req, res) => {
-  const user = req.bean.user;
+router.get("/rank-me", authenticateToken,async (req, res) => {
+  const userData = req.user;
   try {
+    const user = await PumpUser.findOne({tgId:userData.userId})
     const userRank = await PumpUser.aggregate([
       {
         $sort: {
-          maxScore: -1,
+          highestScore: -1, // ✅ Use correct field
         },
       },
       {
         $group: {
           _id: null,
-          users: { $push: { userId: "$userId", score: "$maxScore" } },
+          users: { $push: { userId: "$_id", score: "$highestScore" } },
         },
       },
       {
         $project: {
           rank: {
-            $indexOfArray: ["$users.userId", user.userId],
+            $indexOfArray: ["$users.userId", user._id], // ✅ match by MongoDB _id
           },
         },
       },
     ]);
-
-    const myUserRank = userRank[0]?.rank + 1 || 1;
 
     const projectRank = await PumpProject.aggregate([
       {
@@ -56,35 +64,99 @@ router.get("/rank-me", async (req, res) => {
       },
     ]);
 
-    const myProjectRank = projectRank[0]?.rank + 1 || 1;
-
     const userProject = await PumpProject.findOne({
-      projectId: user.projectId,
+      tokenAddress: user.projectTokenAddress,
     });
 
-    return res.json({
-      userId: user.userId,
-      userRank: myUserRank,
-      projectRank: myProjectRank,
-      userScore: user.maxScore,
+    const resData =  {
+      userId: user.tgId,
+      userRank: userRank[0]?.rank + 1 || 1,
+      projectRank: projectRank[0]?.rank + 1 || 1,
+      userScore: user.highestScore,
       projectId: user.projectId || null,
       projectName: userProject?.name,
-      projectPoints: userProject?.points || 0,
+      projectPoints: userProject?.totalPoints || 0,
       avatar: user.avatar,
-    });
+    }
+    return res.json(resData)
   } catch (error) {
     console.error("Error calculating rank:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error",});
   }
 });
 
-router.get("/", async (req, res) => {
-  const user = req.bean.user;
+router.get('/rank-players', async(req,res)=>{
+  
+  const leaderboard = await GameDay.aggregate([
+    {
+      $group: {
+        _id: "$userId",
+        score: { $max: "$score" },
+        playTime: { $first: "$playTime" } // Optional
+      }
+    },
+    {
+      $lookup: {
+        from: "pumpusers",
+        localField: "_id",
+        foreignField: "_id",
+        as: "user"
+      }
+    },
+    { $unwind: "$user" },
+    {
+      $lookup: {
+        from: "pumpprojects",
+        localField: "user.projectId",
+        foreignField: "_id",
+        as: "project"
+      }
+    },
+    { $unwind: { path: "$project", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        _id: 0,
+        userId: "$_id",
+        score: 1,
+        playTime: 1,
+        displayName: "$user.displayName",
+        username: "$user.username",
+        avatar: "$user.avatar",
+        projectTokenAddress: "$user.projectTokenAddress",
+        totalPoints: "$project.totalPoints",
+        projectName: "$project.name"
+      }
+    },
+    {
+      $sort: {
+        score: -1,
+        playTime: -1
+      }
+    },
+    { $limit: 10 }
+  ]);
+  
+  console.log(leaderboard, "leaderboard")
+  return res.json(leaderboard)
+  
+});
+
+router.get('/rank-projects',async (req,res)=>{
+  const projects = await PumpProject.find({})
+  .sort({ totalPoints: -1 })
+  .limit(10);
+  return res.json(projects)
+})
+
+router.get("/", authenticateToken,async (req, res) => {
+  const user = req.user;
+  const userData = await PumpUser.findOne({tgId:user.userId})
   const ms = await remainTimeMs(user.tgId);
+  const gameDay = await GameDay.findOne().sort({ score: -1 });
   const resp = {
     telegramId: user.userId,
-    maxScore: user.maxScore || 0,
-    maxTime: user.maxTime || 0,
+    maxScore: gameDay.score || 0,
+    maxTime: gameDay.playTime || 0,
     remainTime: ms,
     avatar: user.avatar,
   };
@@ -127,22 +199,36 @@ router.get("/get-invites", async (req, res) => {
   return res.json(users);
 });
 
-router.post("/update-project", async (req, res) => {
-  const user = req.bean.user;
+router.post("/update-project", authenticateToken,async (req, res) => {
+  const userData = req.user;
+  let user = await PumpUser.findOne({tgId: userData.userId})
 
   const updateSchema = Joi.object({
-    projectId: Joi.string().required(),
+    tokenAddress: Joi.string().required(),
   });
   const { error } = updateSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
+  let project = await PumpProject.findOne({tokenAddress:req.body.tokenAddress})
 
-  if (user.projectId === req.body.projectId) {
+  if (user?.projectTokenAddress === req.body.tokenAddress) {
     return res.json({
       success: false,
       message: "You are already part of that project.",
     });
   }
-  user.projectId = req.body.projectId;
+  user.projectTokenAddress = req.body.tokenAddress;
+  if(!project){
+    project = new PumpProject({
+      projectId: req.body.tokenAddress,
+      tokenAddress: req.body.tokenAddress,
+      playerCount:1
+    })
+    await project.save()
+  }else {
+    project.playerCount = project.playerCount+1;
+    await project.save()
+  }
+  user.projectId = project._id
   await user.save();
   return res.json({
     success: true,
@@ -186,26 +272,9 @@ router.get("/search-projects", async (req, res) => {
       },
     ]);
 
-    const response = await fetch(
-      `https://frontend-api-v2.pump.fun/coins?offset=0&limit=100&sort=market_cap&order=DESC&includeNsfw=true&searchTerm=${searchProject}`
-    );
-    const externalProjects = await response.json();
-    // only filter out the projects that are not in the internal projects
-    externalProjects.filter((v) => {
-      return projects.findIndex((p) => p.walletAddress === v.mint) < 0;
-    });
-
-    const combinedProjects = projects.concat(
-      externalProjects.map((p) => ({
-        name: p.name,
-        points: 0,
-        walletAddress: p.mint,
-        imageUrl: p.image_uri,
-      }))
-    );
-
+    console.log(projects)
     return res.json({
-      projects: combinedProjects,
+      projects: projects,
     });
   } catch (error) {
     console.error("Error searching projects:", error);
@@ -213,13 +282,35 @@ router.get("/search-projects", async (req, res) => {
   }
 });
 
-router.get("/referral-data", async (req, res) => {
-  const user = req.bean.user;
-  const ms = await remainTimeMs(user.tgId);
+router.get("/referral-data", authenticateToken,async (req, res) => {
+  const userData = req.user;
+  let user = await PumpUser.findOne({tgId: userData.userId})
+  if(!user.inviteCode){
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let inviteCode = '';
+    for (let i = 0; i < 8; i++) {
+      inviteCode += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    user.inviteCode = inviteCode;
+    
+    await user.save()
+  }
+  console.log(user.inviteCode, "inviteCode")
+  const now = new Date();
+
+  // Create a new Date object for tomorrow at 00:00 (midnight)
+  const midnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1, // Tomorrow
+    0, 0, 0, 0 // At 00:00:00.000
+  );
+
+  const remainingTime = midnight - now;
   return res.json({
-    referralCode: user.tgId,
-    remainTime: ms,
-    inviteLink: user.inviteLink,
+    referralCode: user.inviteCode,
+    remainTime: remainingTime,
+    inviteLink: user.inviteCode,
   });
 });
 
@@ -267,8 +358,9 @@ router.post("/update-wallet", async (req, res) => {
   }
 });
 
-router.post("/update-play", async (req, res) => {
-  const user = req.bean.user;
+router.post("/update-play", authenticateToken ,async (req, res) => {
+  const user = req.user;
+  const userData = await PumpUser.findOne({tgId:user.userId})
   const updateSchema = Joi.object({
     score: Joi.number().required(),
     playTime: Joi.number().required(),
@@ -281,24 +373,30 @@ router.post("/update-play", async (req, res) => {
       return res.json({
         success: true,
         message: "Score updated successfully",
-        remainTime: await remainTimeMs(user.tgId),
+        remainTime: await remainTimeMs(user.userId),
       });
     }
     const project = await PumpProject.findOne({
-      projectId: user.projectId,
+      tokenAddress: userData.projectTokenAddress,
     });
     if (project) {
-      project.points += calculatePoint(score) * (project.boostMulti || 1);
+      project.totalPoints += score;
       await project.save();
     }
     await PumpUser.updateOne(
-      { tgId: user.tgId },
+      { tgId: user.userId },
       {
-        $set: { maxScore: Math.max(user.maxScore, score), maxTime: playTime },
+        $set: { highestScore: Math.max(userData.highestScore, score), totalPlayTime: userData.totalPlayTime+playTime, mcPoints: userData.mcPoints + score, freePlaysRemaining: userData.freePlaysRemaining - 1 },
       }
     );
+    const gameDay = new GameDay({
+      userId: userData._id,
+      score: score,
+      playTime: playTime
+    });
+    await gameDay.save()
     const hist = new PumpHist({
-      tgId: user.tgId,
+      tgId: user.userId,
       score,
       playTime,
     });
@@ -306,23 +404,23 @@ router.post("/update-play", async (req, res) => {
     return res.json({
       success: true,
       message: "Score updated successfully",
-      remainTime: await remainTimeMs(user.tgId),
+      remainTime: await remainTimeMs(user.userId),
     });
   } catch (err) {
     logger.error(err);
     return res.status(500).json({
-      error: "Internal Server Error",
+      error: err,
     });
   }
 });
 
-router.get("/history", async (req, res) => {
+router.get("/history", authenticateToken,async (req, res) => {
   try {
-    const user = req.bean.user;
+    const user = req.user;
     const query = [
       {
         $match: {
-          tgId: user.tgId,
+          tgId: user.userId,
         },
       },
       {
@@ -373,21 +471,30 @@ router.get("/history", async (req, res) => {
   }
 });
 
-router.get("/profile", async (req, res) => {
+router.get("/profile",authenticateToken ,async (req, res) => {
   try {
-    const user = req.bean.user;
+    const userData = req.user;
+    const user = await PumpUser.findOne({tgId:userData.userId});
+    // return userData;
+
+    const cacheKey = cache.generateKey('profile', user.userId);
+    
+    const profile = await cache.getOrSet(cacheKey, async () => {
     const project = await PumpProject.findOne({
       projectId: user.projectId,
     }).exec();
+      
     let projectPoints = 0;
     let projectName = "---";
     let projectWalletAddress = "---";
+      
     if (project) {
       projectPoints = project.points;
       projectName = project.name;
       projectWalletAddress = project.walletAddress;
     }
-    return res.json({
+      
+      return {
       name: user.userId,
       walletAddress: user.walletAddress,
       maxScore: user.maxScore,
@@ -396,11 +503,506 @@ router.get("/profile", async (req, res) => {
       projectPoints,
       projectName,
       projectWalletAddress,
-    });
+      };
+    }, cache.DURATIONS.MEDIUM);
+
+    return res.json(profile);
   } catch (err) {
     logger.error(err);
     return res.status(500).json({ error: "Internal Server Error" });
   }
+});
+
+router.get("/profileUser",authenticateToken ,async (req, res) => {
+  let userheader = req.user;
+  let user = await PumpUser.findOne({tgId:userheader.userId})
+  return user
+})
+
+// New routes for wallet and game functionality
+router.post("/prepare-wallet-verification", async (req, res) => {
+    try {
+        const { walletAddress } = req.body;
+        if (!walletAddress) {
+            return res.status(400).json({ error: "Missing wallet address" });
+        }
+
+        const verificationData = await walletService.prepareWalletVerification(walletAddress);
+        return res.json({
+            success: true,
+            message: verificationData.message,
+            nonce: verificationData.nonce
+        });
+    } catch (error) {
+        logger.error("Error preparing wallet verification", { error });
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+router.post("/verify-wallet", rateLimit('wallet'), async (req, res) => {
+    try {
+        const { signature, walletAddress } = req.body;
+        if (!signature || !walletAddress) {
+            return res.status(400).json({ error: "Missing signature or wallet address" });
+        }
+
+        const isValid = await walletService.verifyWalletConnection(signature, walletAddress);
+        if (!isValid) {
+            return res.status(400).json({ error: "Invalid signature" });
+        }
+
+        // Update user's wallet address
+        const user = req.bean.user;
+        user.walletAddress = walletAddress;
+        await user.save();
+
+        return res.json({ success: true });
+    } catch (error) {
+        logger.error("Error verifying wallet", { error });
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+router.post("/purchase-access", rateLimit('wallet'), async (req, res) => {
+    try {
+        const { signature } = req.body;
+        if (!signature) {
+            return res.status(400).json({ error: "Missing transaction signature" });
+        }
+
+        const success = await gameService.grantPaidAccess(req.bean.user.tgId, signature);
+        if (!success) {
+            return res.status(400).json({ error: "Invalid payment" });
+        }
+
+        return res.json({ success: true });
+    } catch (error) {
+        logger.error("Error processing payment", { error });
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+router.get("/check-eligibility", rateLimit('play'), async (req, res) => {
+    try {
+        const user = req.bean.user;
+        const eligibility = await gameService.canUserPlay(user.tgId, user.walletAddress);
+        return res.json(eligibility);
+    } catch (error) {
+        logger.error("Error checking eligibility", { error });
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+router.post("/verify-tweet", rateLimit('tweet'), async (req, res) => {
+    try {
+        const { tweetId } = req.body;
+        if (!tweetId) {
+            return res.status(400).json({ error: "Missing tweet ID" });
+        }
+
+        const result = await twitterService.verifyTweet(tweetId, req.bean.user.tgId);
+        if (!result.success) {
+            return res.status(400).json({ error: result.reason });
+        }
+
+        // Grant an extra play through game service
+        await gameService.verifyTweet(req.bean.user.tgId, tweetId);
+
+        return res.json({ success: true });
+    } catch (error) {
+        logger.error("Error verifying tweet", { error });
+        return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get current user's game state
+router.get("/state", async (req, res) => {
+  try {
+    const user = await gameService.getUserState(req.bean.user.tgId);
+    const canPlay = await gameService.canUserPlay(user.tgId, user.walletAddress);
+    
+    return res.json({
+      userId: user.tgId,
+      displayName: user.displayName,
+      avatar: user.avatar,
+      accessType: user.accessType,
+      freePlaysRemaining: user.freePlaysRemaining,
+      tweetVerifiedToday: user.tweetVerifiedToday,
+      currentProject: user.currentProject,
+      highestScore: user.highestScore,
+      canPlay: canPlay.canPlay,
+      playReason: canPlay.reason
+    });
+  } catch (error) {
+    logger.error("Error getting game state:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Start a new game session
+router.post("/start", async (req, res) => {
+  try {
+    const user = req.bean.user;
+    
+    // Check if user can play
+    const canPlay = await gameService.canUserPlay(user.tgId, user.walletAddress);
+    if (!canPlay.canPlay) {
+      return res.status(403).json({ 
+        message: "You cannot play at this time",
+        reason: canPlay.reason
+      });
+    }
+    
+    // Start session
+    const session = await gameService.startGameSession(
+      user.tgId,
+      user.currentProject?.projectId
+    );
+    
+    // Consume play if needed
+    await gameService.consumePlay(user.tgId);
+    
+    return res.json({
+      sessionId: session._id,
+      message: "Game session started successfully"
+    });
+  } catch (error) {
+    logger.error("Error starting game:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// End a game session
+router.post("/end", async (req, res) => {
+  try {
+    const schema = Joi.object({
+      sessionId: Joi.string().required(),
+      obstaclesPassed: Joi.number().min(0).required()
+    });
+    
+    const { error, value } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+    
+    const session = await gameService.endGameSession(
+      value.sessionId,
+      value.obstaclesPassed
+    );
+    
+    return res.json({
+      score: session.currentScore,
+      isHighScore: session.isHighScore,
+      isDailyHighScore: session.isDailyHighScore,
+      mcPointsEarned: session.mcPointsEarned
+    });
+  } catch (error) {
+    logger.error("Error ending game:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Get daily leaderboard
+router.get("/leaderboard/daily", async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 10, 100);
+    const leaderboard = await globalDayService.getDailyLeaderboard(limit);
+    return res.json(leaderboard);
+  } catch (error) {
+    logger.error("Error getting daily leaderboard:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Get project leaderboard
+router.get("/leaderboard/projects", async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 10, 100);
+    const leaderboard = await globalDayService.getProjectLeaderboard(limit);
+    return res.json(leaderboard);
+  } catch (error) {
+    logger.error("Error getting project leaderboard:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Get user's rank
+router.get("/rank", async (req, res) => {
+  const user = req.bean.user;
+  try {
+    const cacheKey = cache.generateKey('rank', user.tgId);
+    
+    const rankData = await cache.getOrSet(cacheKey, async () => {
+      const [currentDay, userProject] = await Promise.all([
+        globalDayService.getCurrentDay(),
+        user.currentProject?.projectId ? PumpProject.findOne({ projectId: user.currentProject.projectId }) : null
+      ]);
+
+      // Get user's daily rank
+      const dailyRank = await GameSession.countDocuments({
+        globalDayId: currentDay._id,
+        currentScore: { $gt: user.highestScore }
+      }) + 1;
+
+      // Get project's daily rank if user has a project
+      let projectRank = null;
+      if (userProject) {
+        projectRank = await PumpProject.countDocuments({
+          currentGlobalDayId: currentDay._id,
+          dailyPoints: { $gt: userProject.dailyPoints }
+        }) + 1;
+      }
+
+      return {
+        userId: user.tgId,
+        displayName: user.displayName,
+        avatar: user.avatar,
+        dailyRank,
+        dailyScore: user.highestScore,
+        projectId: userProject?.projectId,
+        projectName: userProject?.name,
+        projectRank,
+        projectPoints: userProject?.dailyPoints || 0
+      };
+    }, cache.DURATIONS.SHORT);
+
+    return res.json(rankData);
+  } catch (error) {
+    logger.error("Error calculating rank:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Update user's project
+router.post("/project", async (req, res) => {
+  try {
+    const schema = Joi.object({
+      projectId: Joi.string().required()
+    });
+    
+    const { error, value } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+    
+    const user = req.bean.user;
+    const project = await PumpProject.findOne({ projectId: value.projectId });
+    
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+    
+    if (user.currentProject?.projectId === value.projectId) {
+      return res.status(400).json({ message: "You are already in this project" });
+    }
+    
+    user.currentProject = {
+      projectId: project.projectId,
+      name: project.name,
+      joinedAt: new Date()
+    };
+    
+    await user.save();
+    
+    return res.json({
+      message: "Project updated successfully",
+      project: {
+        projectId: project.projectId,
+        name: project.name,
+        imageUrl: project.imageUrl
+      }
+    });
+  } catch (error) {
+    logger.error("Error updating project:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Verify tweet for extra play
+router.post("/verify-tweet", async (req, res) => {
+  try {
+    const schema = Joi.object({
+      tweetId: Joi.string().required()
+    });
+    
+    const { error, value } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+    
+    const user = req.bean.user;
+    
+    // Verify tweet content and ownership
+    const isValid = await twitterService.verifyTweet(value.tweetId, user.tgId);
+    if (!isValid) {
+      return res.status(400).json({ message: "Invalid tweet" });
+    }
+    
+    // Grant extra play
+    const success = await gameService.verifyTweet(user.tgId, value.tweetId);
+    if (!success) {
+      return res.status(400).json({ message: "Tweet already verified today" });
+    }
+    
+    return res.json({
+      message: "Tweet verified successfully",
+      freePlaysRemaining: user.freePlaysRemaining
+    });
+  } catch (error) {
+    logger.error("Error verifying tweet:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Get all projects
+router.get("/projects", async (req, res) => {
+  try {
+    const projects = await PumpProject.find()
+      .select('projectId name imageUrl dailyPoints playerCount')
+      .sort('-dailyPoints');
+      
+    return res.json(projects);
+  } catch (error) {
+    logger.error("Error getting projects:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Search projects
+router.get("/projects/search", async (req, res) => {
+  try {
+    const searchTerm = req.query.q || "";
+    const projects = await PumpProject.find({
+      name: { $regex: searchTerm, $options: "i" }
+    })
+    .select('projectId name imageUrl dailyPoints playerCount')
+    .sort('-dailyPoints')
+    .limit(20);
+    
+    return res.json(projects);
+  } catch (error) {
+    logger.error("Error searching projects:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Get user profile
+router.get('/profileData', authenticateToken, async (req, res) => {
+    try {
+        const user = req.user;
+        const userData = await PumpUser.findOne({tgId: user.userId});
+        const project = await PumpProject.findOne({tokenAddress:userData.projectTokenAddress})
+        const now = new Date();
+
+        // Create a new Date object for tomorrow at 00:00 (midnight)
+        const midnight = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 1, // Tomorrow
+          0, 0, 0, 0 // At 00:00:00.000
+        );
+
+        // Return the difference in milliseconds
+        const remainingTime = midnight - now;
+        res.json({
+            tgId: userData.tgId,
+            username: userData.username,
+            displayName: userData.displayName,
+            freePlaysRemaining: userData.freePlaysRemaining,
+            walletAddress: userData.walletAddress,
+            maxScore: userData.mcPoints,
+            tokenAddress: userData.projectTokenAddress,
+            projectPoints: project.totalPoints,
+            remainTime: remainingTime
+        });
+    } catch (error) {
+        logger.error('Error fetching profile:', error);
+        res.status(500).json({ message: 'Failed to fetch profile' });
+    }
+});
+
+// Get leaderboard
+router.get('/leaderboard', async (req, res) => {
+    try {
+        const leaderboard = await globalDayService.getDailyLeaderboard();
+        res.json(leaderboard);
+    } catch (error) {
+        logger.error('Error fetching leaderboard:', error);
+        res.status(500).json({ message: 'Failed to fetch leaderboard' });
+    }
+});
+
+// Start game session
+router.post('/start', rateLimit('play'), async (req, res) => {
+    try {
+        const { projectId } = req.body;
+        
+        if (!projectId) {
+            return res.status(400).json({ message: 'Project ID is required' });
+        }
+
+        const project = await PumpProject.findById(projectId);
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        const currentDay = await globalDayService.getCurrentDay();
+        
+        const session = new GameSession({
+            userId: req.user._id,
+            projectId: project._id,
+            globalDayId: currentDay._id,
+            startedAt: new Date(),
+            currentScore: 0
+        });
+
+        await session.save();
+
+        res.json({
+            sessionId: session._id,
+            project: {
+                name: project.name,
+                imageUrl: project.imageUrl
+            }
+        });
+
+    } catch (error) {
+        logger.error('Error starting game session:', error);
+        res.status(500).json({ message: 'Failed to start game session' });
+    }
+});
+
+// Submit game play
+router.post('/play', rateLimit('play'), async (req, res) => {
+    try {
+        const { sessionId, score } = req.body;
+
+        if (!sessionId || typeof score !== 'number') {
+            return res.status(400).json({ message: 'Session ID and score are required' });
+        }
+
+        const session = await GameSession.findById(sessionId);
+        if (!session) {
+            return res.status(404).json({ message: 'Game session not found' });
+        }
+
+        if (session.userId.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to update this session' });
+        }
+
+        session.currentScore = score;
+        session.lastPlayedAt = new Date();
+        await session.save();
+
+        res.json({
+            sessionId: session._id,
+            currentScore: session.currentScore
+        });
+
+    } catch (error) {
+        logger.error('Error submitting play:', error);
+        res.status(500).json({ message: 'Failed to submit play' });
+    }
 });
 
 module.exports = router;

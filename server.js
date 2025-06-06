@@ -1,94 +1,75 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-const path = require("path");
-const logger = require("./services/logger.js");
-const game = require("./routes/game.js");
-const public = require("./routes/public.js");
-const { registerMetrics, metricsMiddleware } = require("./metrics.js");
-// const bot = require("./bot");
-const { authenticateToken } = require("./utils/gen.js");
-const { MONGO_URL, HOST_PORT } = require("./config.js");
-const cors = require("cors");
-const { authBean } = require("./services/bean.js");
-const { updateBoost } = require("./utils/calc.js");
+require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const compression = require('compression');
+const {startListener } = require('./services/walletListener');
 
+// Import models first
+require('./models');
+
+// const { scheduleGlobalDayReset, schedulePeriodicCheck } = require('./cron/globalDayReset');
+const scheduleDailyReset = require('./cron/dailyReset')
+const gameRoutes = require('./routes/game');
+const publicRoutes = require('./routes/public');
+const walletRoutes = require('./routes/wallet')
+const authMiddleware = require('./middlewares/auth');
+const errorHandler = require('./middlewares/errorHandler');
+const logger = require('./services/logger');
+const config = require('./config');
+const telegramService = require('./services/telegram');
+
+// Initialize Express app
 const app = express();
 
+// Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(helmet());
+app.use(morgan('combined'));
+app.use(compression());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-mongoose
-  .connect(MONGO_URL || "mongodb://localhost:27017/pumpshie")
-  .then(() => {
-    logger.info("Connected to MongoDB");
+// Routes
+app.use('/api/public', publicRoutes);
+app.use('/api/game', gameRoutes);
+app.use('/api/wallet', walletRoutes)
 
-    (async function () {
-      await updateBoost();
-      setInterval(async () => {
-        await updateBoost();
-      }, 1000 * 60 * 60 * 2);
-    })();
+// Error handling
+app.use(errorHandler);
 
-    // bot
-    //   .launch()
-    //   .then(() => {
-    //     logger.info(`Bot is running`);
-    //   })
-    //   .catch((error) => {
-    //     logger.error(`Failed to launch bot: ${error}`);
-    //   });
-  })
-  .catch((error) => {
-    logger.error(`MongoDB connection error: ${error}`);
-  });
+// Connect to MongoDB and start server
+const startServer = async () => {
+  try {
+    console.log('Connecting to MongoDB...');
+    await mongoose.connect(process.env.MONGO_URL);
+    logger.info('Connected to MongoDB');
+    console.log('Mongo connected, HOST_PORT:', process.env.HOST_PORT);
 
-// Middleware for logging and metrics
-app.use((req, res, next) => {
-  logger.info(`Incoming request: ${req.method} ${req.url}`);
-  next();
-});
+    console.log('Scheduling cron jobs...');
+    // scheduleGlobalDayReset();
+    // schedulePeriodicCheck();
+    scheduleDailyReset();
+    logger.info('Global day cron jobs initialized');
 
-app.use(metricsMiddleware);
+    console.log('Starting Telegram bot...');
+    telegramService.startBot();
+    logger.info('Telegram bot started');
 
-// Serve static files
-app.use(express.static(path.join(__dirname, "public")));
+    startListener()
 
-// Use routes
-app.use("/api/game", [authenticateToken, authBean], game);
-app.use("/api/public", public);
-app.get("/test", (req, res) => {
-  res.json({ message: "Connection successful. Server is running!" });
-});
+    const PORT = process.env.HOST_PORT || 3000;
 
-// Metrics endpoint
-app.get("/metrics", async (req, res) => {
-  res.set("Content-Type", registerMetrics.contentType);
-  res.end(await registerMetrics.metrics());
-});
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    console.error(error);  // Also print error to console
+    process.exit(1);
+  }
+};
 
-// Start the server
-const PORT = HOST_PORT || 3000;
-
-const server = app.listen(PORT, () => {
-  logger.info(`Server is running on port ${PORT}`);
-});
-
-// Graceful shutdown
-process.once("SIGINT", () => {
-  logger.info("Received SIGINT. Stopping the bot and server...");
-  server.close(() => {
-    //    bot.stop("SIGINT");
-    logger.info("Server stopped gracefully");
-    process.exit(0);
-  });
-});
-
-process.once("SIGTERM", () => {
-  logger.info("Received SIGTERM. Stopping the bot and server...");
-  server.close(() => {
-    //    bot.stop("SIGTERM");
-    logger.info("Server stopped gracefully");
-    process.exit(0);
-  });
-});
+startServer();
