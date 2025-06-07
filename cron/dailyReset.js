@@ -4,7 +4,6 @@ const GameDay = require('../models/GameDay');
 const PumpUser = require("../models/PumpUser");
 const logger = require("../services/logger");
 require('dotenv').config();
-const logger = require("../services/logger");
 
 const sendReward = async()=>{
     try{

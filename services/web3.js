@@ -12,13 +12,18 @@ const {
 require('dotenv').config();
 const fs = require('fs');
 const logger = require('./logger');
-  
+const bs58 = require("bs58")
   // ⚙️ Setup
 const connection = new Connection(process.env.HELIUS_RPC, 'confirmed');
+
+console.log(process.env.ADMIN_PRIVATE_KEY, "process.env.ADMIN_PRIVATE_KEY")
   
   // Load admin wallet (adjust path if needed)
-const secretKey = Uint8Array.from(JSON.parse(process.env.ADMIN_PRIVATE_KEY));
+// const secretKey = bs58.decode(process.env.ADMIN_PRIVATE_KEY);
+const secretKey = bs58.default.decode(process.env.ADMIN_PRIVATE_KEY);
+console.log(secretKey, "secretKey")
 const adminKeypair = Keypair.fromSecretKey(secretKey);
+console.log(adminKeypair, "adminKeypair")
   
   // Addresses
 const mintAddress = new PublicKey(process.env.TOKEN_MINT_ADDRESS);
