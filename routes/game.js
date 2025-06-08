@@ -905,14 +905,14 @@ router.get('/profileData', authenticateToken, async (req, res) => {
         // Return the difference in milliseconds
         const remainingTime = midnight - now;
         res.json({
-            tgId: userData.tgId,
-            username: userData.username,
-            displayName: userData.displayName,
-            freePlaysRemaining: userData.freePlaysRemaining,
-            walletAddress: userData.walletAddress,
+            tgId: userData?.tgId,
+            username: userData?.username,
+            displayName: userData?.displayName,
+            freePlaysRemaining: userData?.freePlaysRemaining,
+            walletAddress: userData?.walletAddress || "",
             maxScore: userData.mcPoints,
-            tokenAddress: userData.projectTokenAddress,
-            projectPoints: project.totalPoints,
+            tokenAddress: userData.projectTokenAddress || "",
+            projectPoints: project?.totalPoints || 0,
             remainTime: remainingTime
         });
     } catch (error) {
