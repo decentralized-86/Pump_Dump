@@ -1,5 +1,7 @@
 const express = require("express");
 const PumpUser = require("../models/PumpUser");
+const Constants = require("../models/Constants");
+const Meme = require("../models/Meme");
 const GameDay = require('../models/GameDay');
 const GameSession = require("../models/GameSession");
 const logger = require("../services/logger");
@@ -14,9 +16,55 @@ const globalDayService = require("../services/globalDay");
 const twitterService = require("../services/twitter");
 const cache = require("../services/cache");
 const rateLimit = require("../middlewares/rateLimit");
-const { authenticateToken } = require("../utils/gen");
+const { authenticateToken,authenticateAdmin } = require("../utils/gen");
 
 const router = express.Router();
+
+
+router.put("/update-admin", authenticateAdmin, async(req,res)=>{
+  const user = req.user;
+  const sponsor =  req.body?.sponsor;
+  const reward = req.body?.reward;
+  const constant = await Constants.findOne({adminTgId:user.tgId})
+  constant.sponsor = sponsor??null;
+  constant.reward = reward??constant.reward
+  await constant.save();
+  return res.json(constant)
+})
+
+router.get("/admin-constant", authenticateAdmin, async(req,res)=>{
+  const user = req.user;
+  const constant = await Constants.findOne({adminTgId:user.tgId});
+  return res.json(constant);
+})
+
+router.post("/meme", authenticateAdmin, async(req,res)=>{
+  try{
+    const user = req.user;
+    const candleType = req.body?.candleType;
+    const text = req.body?.text;
+    const what = req.body?.what||null;
+    const pos = req.body?.pos||null;
+    let meme = new Meme({
+      candleType,
+      text,
+      what,
+      pos
+    });
+    await meme.save()
+    return res.json(meme)
+  }catch(err){
+    res.status(500).json(err)
+  }
+})
+
+router.get("/all-memes",authenticateToken, async(req,res)=>{
+  const meme = await Meme.find({});
+  const CandlesRed = meme.filter((ele)=>ele.candleType=='red')
+  const CandlesGreen =  meme.filter((ele)=>ele.candleType=='green')
+  const MovingTexts =  meme.filter((ele)=>ele.candleType=='moving')
+  return res.json({CandlesRed,CandlesGreen, MovingTexts})
+})
 
 router.get("/rank-me", authenticateToken,async (req, res) => {
   const userData = req.user;
@@ -142,7 +190,7 @@ router.get('/rank-players', async(req,res)=>{
 });
 
 router.get('/rank-projects',async (req,res)=>{
-  const projects = await PumpProject.find({})
+  const projects = await PumpProject.find({ totalPoints: { $gt: 0 } })
   .sort({ totalPoints: -1 })
   .limit(10);
   return res.json(projects)
