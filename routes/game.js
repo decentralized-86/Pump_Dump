@@ -17,6 +17,7 @@ const twitterService = require("../services/twitter");
 const cache = require("../services/cache");
 const rateLimit = require("../middlewares/rateLimit");
 const { authenticateToken,authenticateAdmin } = require("../utils/gen");
+const {getProjectMetadata} = require("../services/project")
 
 const router = express.Router();
 
@@ -120,6 +121,7 @@ router.get("/rank-me", authenticateToken,async (req, res) => {
       userId: user.tgId,
       userRank: userRank[0]?.rank + 1 || 1,
       projectRank: projectRank[0]?.rank + 1 || 1,
+      username: user.username,
       userScore: user.highestScore,
       projectId: user.projectId || null,
       projectName: userProject?.name,
@@ -203,6 +205,8 @@ router.get("/", authenticateToken,async (req, res) => {
   const gameDay = await GameDay.findOne().sort({ score: -1 });
   const resp = {
     telegramId: user.userId,
+    username: userData.username,
+    firstName:userData.firstName,
     maxScore: gameDay.score || 0,
     maxTime: gameDay.playTime || 0,
     remainTime: ms,
@@ -257,7 +261,21 @@ router.post("/update-project", authenticateToken,async (req, res) => {
   const { error } = updateSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
   let project = await PumpProject.findOne({tokenAddress:req.body.tokenAddress})
-
+  if(!project){
+    const meta = await getProjectMetadata(req.body.tokenAddress)
+    project = new PumpProject({
+      projectId: req.body.tokenAddress,
+      tokenAddress: req.body.tokenAddress,
+      playerCount:1,
+      name: meta?.name,
+      symbol: meta?.symbol,
+      imageUrl: meta?.uri,
+    })
+    await project.save()
+  }else {
+    project.playerCount = project.playerCount+1;
+    await project.save()
+  }
   if (user?.projectTokenAddress === req.body.tokenAddress) {
     return res.json({
       success: false,
@@ -265,18 +283,7 @@ router.post("/update-project", authenticateToken,async (req, res) => {
     });
   }
   user.projectTokenAddress = req.body.tokenAddress;
-  if(!project){
-    project = new PumpProject({
-      projectId: req.body.tokenAddress,
-      tokenAddress: req.body.tokenAddress,
-      playerCount:1
-    })
-    await project.save()
-  }else {
-    project.playerCount = project.playerCount+1;
-    await project.save()
-  }
-  user.projectId = project._id
+  user.projectId = project._id;
   await user.save();
   return res.json({
     success: true,
@@ -497,9 +504,10 @@ router.get("/history", authenticateToken,async (req, res) => {
         $project: {
           //date: "$createdAt",
           projectName: "$name",
-          name: "$user.name",
+          name: "$user.username",
           score: "$score",
           avatar: "$user.avatar",
+          projectName: "$user.projectTokenAddress",
           date: {
             $dateToString: {
               format: "%Y-%m-%d %H:%M:%S",

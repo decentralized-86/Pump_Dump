@@ -9,6 +9,10 @@ const PumpProjectSchema = new mongoose.Schema({
     type: String,
     required: false
   },
+  symbol: {
+    type: String,
+    required: false
+  },
   // description: {
   //   type: String
   // },
