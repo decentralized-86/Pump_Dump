@@ -58,7 +58,7 @@ const reset = async()=>{
 }
 
 const scheduleDailyReset = () => {
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('0 0 * * *', async () => {
     console.log('🔁 Running daily reset at midnight...');
 
     console.log("sending rewards...")
@@ -70,5 +70,3 @@ const scheduleDailyReset = () => {
 };
 
 module.exports = scheduleDailyReset;
-
-// '0 0 * * *'
