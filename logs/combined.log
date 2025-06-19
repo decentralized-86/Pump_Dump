@@ -2950,3 +2950,90 @@
 {"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-19T14:30:05.694Z"}
 {"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-19T14:30:05.902Z","username":"Solpump1_bot"}
 {"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-19T14:30:05.902Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-19T14:35:45.590Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-19T14:35:45.605Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-19T14:35:45.606Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-19T14:35:45.607Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-19T14:35:46.501Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-19T14:35:46.506Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-19T14:35:46.723Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-19T14:35:46.724Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-19T15:07:53.179Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-19T15:07:53.191Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-19T15:07:53.192Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-19T15:07:53.193Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-19T15:07:54.124Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-19T15:07:54.126Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-19T15:07:54.341Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-19T15:07:54.341Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-19T15:08:50.121Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-19T15:08:50.129Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-19T15:08:50.130Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-19T15:08:50.132Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-19T15:08:50.975Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-19T15:08:50.978Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-19T15:08:51.181Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-19T15:08:51.181Z"}
+{"level":"error","message":"error is not defined","stack":"ReferenceError: error is not defined\n    at sendTokens (/Users/thomasjose/Documents/projects/Pump_Dump/services/web3.js:83:49)\n    at sendReward (/Users/thomasjose/Documents/projects/Pump_Dump/cron/dailyReset.js:44:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Task._execution (/Users/thomasjose/Documents/projects/Pump_Dump/cron/dailyReset.js:65:5)","timestamp":"2025-06-19T15:09:00.249Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-19T15:10:16.819Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-19T15:10:16.832Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-19T15:10:16.833Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-19T15:10:16.835Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-19T15:10:17.672Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-19T15:10:17.674Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-19T15:10:17.858Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-19T15:10:17.859Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-19T15:12:10.333Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-19T15:12:10.348Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-19T15:12:10.349Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-19T15:12:10.350Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-19T15:12:11.357Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-19T15:12:11.359Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-19T15:12:11.561Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-19T15:12:11.562Z"}
+{"err":{},"level":"error","message":"error sending rewards","timestamp":"2025-06-19T15:13:00.485Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-19T15:15:52.781Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-19T15:15:52.784Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-19T15:15:52.784Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-19T15:15:52.785Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-19T15:15:53.676Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-19T15:15:53.680Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-19T15:15:53.886Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-19T15:15:53.887Z"}
+{"level":"error","message":"Cannot read properties of undefined (reading 'walletAddress')","stack":"TypeError: Cannot read properties of undefined (reading 'walletAddress')\n    at sendReward (/Users/thomasjose/Documents/projects/Pump_Dump/cron/dailyReset.js:44:37)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Task._execution (/Users/thomasjose/Documents/projects/Pump_Dump/cron/dailyReset.js:65:5)","timestamp":"2025-06-19T15:16:01.000Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-19T15:16:59.507Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-19T15:16:59.515Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-19T15:16:59.516Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-19T15:16:59.517Z"}
+{"level":"error","message":"Cannot read properties of undefined (reading 'walletAddress')","stack":"TypeError: Cannot read properties of undefined (reading 'walletAddress')\n    at sendReward (/Users/thomasjose/Documents/projects/Pump_Dump/cron/dailyReset.js:44:37)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Task._execution (/Users/thomasjose/Documents/projects/Pump_Dump/cron/dailyReset.js:65:5)","timestamp":"2025-06-19T15:17:00.572Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-19T15:17:00.630Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-19T15:17:00.632Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-19T15:17:00.851Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-19T15:17:00.852Z"}
+{"err":{},"level":"error","message":"error sending rewards","timestamp":"2025-06-19T15:18:00.627Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-19T15:19:43.626Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-19T15:19:43.636Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-19T15:19:43.637Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-19T15:19:43.638Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-19T15:19:44.526Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-19T15:19:44.528Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-19T15:19:44.735Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-19T15:19:44.736Z"}
+{"err":{},"level":"error","message":"error sending rewards","timestamp":"2025-06-19T15:20:00.945Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-19T15:21:00.054Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-19T15:21:00.062Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-19T15:21:00.063Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-19T15:21:00.064Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-19T15:21:01.236Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-19T15:21:01.238Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-19T15:21:01.455Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-19T15:21:01.456Z"}
+{"err":{},"level":"error","message":"error sending rewards","timestamp":"2025-06-19T15:22:00.210Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-19T15:22:33.402Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-19T15:22:33.410Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-19T15:22:33.410Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-19T15:22:33.411Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-19T15:22:34.333Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-19T15:22:34.336Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-19T15:22:34.535Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-19T15:22:34.536Z"}

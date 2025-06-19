@@ -35,7 +35,7 @@ const sendReward = async()=>{
                 userId: 1,
                 score: 1,
                 playTime: 1,
-                walletAddress: 1,
+                walletAddress: '$user.walletAddress',
                 username: '$user.username'
               }
             }
@@ -58,7 +58,7 @@ const reset = async()=>{
 }
 
 const scheduleDailyReset = () => {
-  cron.schedule('0 0 * * *', async () => {
+  cron.schedule('* * * * *', async () => {
     console.log('🔁 Running daily reset at midnight...');
 
     console.log("sending rewards...")
@@ -70,3 +70,5 @@ const scheduleDailyReset = () => {
 };
 
 module.exports = scheduleDailyReset;
+
+// '0 0 * * *'
