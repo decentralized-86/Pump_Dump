@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const Constant = require("../models/Constants");
 require('dotenv').config();
 const Constants = require("../models/Constants");
 const PumpUser = require("../models/PumpUser");
@@ -22,9 +23,30 @@ const generateJwtToken = ({
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365, // Token valid for 1 year
   };
-
   return jwt.sign(payload, JWT_SECRET, { algorithm: "HS256" });
 };
+
+const generateAdminJWTToken = async(
+  tgId,
+  password) => {
+  try{
+    const constant = await Constants.findOne({adminUserName:tgId});
+    if(password!=constant.password) return {success: false}
+    const token = jwt.sign(
+      { userId: constant.adminTgId },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    return {
+      success: true,
+      token
+    }
+  }catch(err){
+    return {success: false}
+  }
+  
+};
+
 
 const authenticateAdmin = async(req,res,next)=>{
   const authHeader = req.headers["authorization"];
@@ -34,7 +56,7 @@ const authenticateAdmin = async(req,res,next)=>{
       .status(401)
       .json({ message: "Access Denied: No Token Provided" });
   }
-  jwt.verify(token, "solpump-game-secret-key-2024", async(err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, async(err, user) => {
     if (err) {
       return res.status(403).json({ message: "Access Denied: Invalid Token" });
     }
@@ -54,7 +76,6 @@ const authenticateAdmin = async(req,res,next)=>{
 }
 
 const authenticateToken = (req, res, next) => {
-  console.log("middleware here")
   const authHeader = req.headers["authorization"];
   console.log(authHeader)
   const token = authHeader && authHeader.split(" ")[1]; // Extract token from 'Bearer token'
@@ -65,7 +86,7 @@ const authenticateToken = (req, res, next) => {
       .json({ message: "Access Denied: No Token Provided" });
   }
 
-  jwt.verify(token, "solpump-game-secret-key-2024", (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
       return res.status(403).json({ message: "Access Denied: Invalid Token" });
     }
@@ -75,4 +96,4 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-module.exports = { generateJwtToken, authenticateToken, authenticateAdmin };
+module.exports = { generateJwtToken, authenticateToken, authenticateAdmin, generateAdminJWTToken };

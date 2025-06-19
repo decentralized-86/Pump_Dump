@@ -13,6 +13,14 @@ const constantsSchema = new mongoose.Schema(
     reward: {
       type: Number,
       required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    adminUserName: {
+      type: String,
+      required: true
     }
   },
   {

@@ -1,5 +1,6 @@
 const axios = require('axios');
 require('dotenv').config();
+
 async function getProjectMetadata(projectTokenAddress){
     try{
         const options = {
@@ -19,10 +20,11 @@ async function getProjectMetadata(projectTokenAddress){
         const response = await axios(options);
         const result = response.data;
         const metadata = result[0]?.onChainMetadata?.metadata?.data;
+        const resp = await axios({method:"GET",url:metadata.uri});
         return {
             name: metadata?.name,
             symbol: metadata?.symbol,
-            uri: metadata?.uri,
+            uri: resp.data?.image|| null,
         };  
     }catch(err){
         console.log(err)

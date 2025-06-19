@@ -16,10 +16,31 @@ const globalDayService = require("../services/globalDay");
 const twitterService = require("../services/twitter");
 const cache = require("../services/cache");
 const rateLimit = require("../middlewares/rateLimit");
-const { authenticateToken,authenticateAdmin } = require("../utils/gen");
+const { authenticateToken,authenticateAdmin,generateAdminJWTToken } = require("../utils/gen");
 const {getProjectMetadata} = require("../services/project")
 
 const router = express.Router();
+
+router.get("/admin-login",async(req,res)=>{
+  const tgId =  req.body?.username;
+  const password = req.body?.password;
+  const resp = await generateAdminJWTToken(tgId, password);
+  const code = resp.success?200:403;
+  return res.status(code).json(resp)
+})
+
+router.delete("/delete-project/:address", authenticateAdmin, async(req,res)=>{
+  try{
+    const {address} = req.params;
+    const project = await PumpProject.findOne({tokenAddress: address})
+    await PumpUser.updateMany({projectId: project._id},{projectId: null, projectTokenAddress: null})
+    await PumpProject.deleteOne({ tokenAddress: address });
+    console.log("done")
+    return res.status(200).json({success:"true"});
+  }catch(err){
+    return res.status(500).json(err)
+  }
+});
 
 
 router.put("/update-admin", authenticateAdmin, async(req,res)=>{
@@ -125,6 +146,7 @@ router.get("/rank-me", authenticateToken,async (req, res) => {
       userScore: user.highestScore,
       projectId: user.projectId || null,
       projectName: userProject?.name,
+      projectImage: userProject?.imageUrl,
       projectPoints: userProject?.totalPoints || 0,
       avatar: user.avatar,
     }
@@ -174,7 +196,8 @@ router.get('/rank-players', async(req,res)=>{
         avatar: "$user.avatar",
         projectTokenAddress: "$user.projectTokenAddress",
         totalPoints: "$project.totalPoints",
-        projectName: "$project.name"
+        projectName: "$project.name",
+        projectImage: "$project.imageUrl"
       }
     },
     {
@@ -299,8 +322,11 @@ router.get("/projects", async (req, res) => {
         projectId: 1,
         name: 1,
         points: 1,
+        score: 1,
+        symbol:1,
         walletAddress: 1,
         projectName: "$name",
+        image: "imageUrl",
       },
     },
   ]);
@@ -926,7 +952,6 @@ router.post("/verify-tweet", async (req, res) => {
 router.get("/projects", async (req, res) => {
   try {
     const projects = await PumpProject.find()
-      .select('projectId name imageUrl dailyPoints playerCount')
       .sort('-dailyPoints');
       
     return res.json(projects);
