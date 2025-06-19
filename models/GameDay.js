@@ -14,6 +14,10 @@ const gameDaySchema = new mongoose.Schema(
     playTime: {
       type: Number,
       required: true,
+    },
+    projectName: {
+      type: String,
+      required: true,
     }
   },
   {

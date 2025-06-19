@@ -205,12 +205,12 @@ router.get("/", authenticateToken,async (req, res) => {
   const gameDay = await GameDay.findOne().sort({ score: -1 });
   const resp = {
     telegramId: user.userId,
-    username: userData.username,
-    firstName:userData.firstName,
-    maxScore: gameDay.score || 0,
-    maxTime: gameDay.playTime || 0,
+    username: userData?.username,
+    firstName:userData?.firstName,
+    maxScore: gameDay?.score || 0,
+    maxTime: gameDay?.playTime || 0,
     remainTime: ms,
-    avatar: user.avatar,
+    avatar: userData?.avatar,
   };
   return res.json(resp);
 });
@@ -288,6 +288,7 @@ router.post("/update-project", authenticateToken,async (req, res) => {
   return res.json({
     success: true,
     message: "Selected updated project successfully",
+    project:project,
   });
 });
 
@@ -447,13 +448,15 @@ router.post("/update-play", authenticateToken ,async (req, res) => {
     const gameDay = new GameDay({
       userId: userData._id,
       score: score,
-      playTime: playTime
+      playTime: playTime,
+      projectName: project?.name || null,
     });
     await gameDay.save()
     const hist = new PumpHist({
       tgId: user.userId,
       score,
       playTime,
+      projectName: project?.name || null,
     });
     await hist.save();
     return res.json({
@@ -501,13 +504,22 @@ router.get("/history", authenticateToken,async (req, res) => {
         },
       },
       {
+        $lookup: {
+          from: "pumpprojects",
+          localField: "user.projectId",
+          foreignField: "_id",
+          as: "project"
+        }
+      },
+      { $unwind: { path: "$project", preserveNullAndEmptyArrays: true } },
+      {
         $project: {
           //date: "$createdAt",
-          projectName: "$name",
+          pName: "$projectName",
           name: "$user.username",
           score: "$score",
           avatar: "$user.avatar",
-          projectName: "$user.projectTokenAddress",
+          projectName: "$project.name",
           date: {
             $dateToString: {
               format: "%Y-%m-%d %H:%M:%S",
@@ -966,6 +978,7 @@ router.get('/profileData', authenticateToken, async (req, res) => {
             displayName: userData?.displayName,
             freePlaysRemaining: userData?.freePlaysRemaining,
             walletAddress: userData?.walletAddress || "",
+            projectName: project?.name || "",
             maxScore: userData.mcPoints,
             tokenAddress: userData.projectTokenAddress || "",
             projectPoints: project?.totalPoints || 0,

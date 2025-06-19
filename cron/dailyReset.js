@@ -50,7 +50,7 @@ const sendReward = async()=>{
 const reset = async()=>{
     try{
         await GameDay.deleteMany({});
-        await PumpUser.updateMany({}, { $set: { highestScore: 0 } });
+        await PumpUser.updateMany({}, { $set: { highestScore: 0, mcPoints: 0 } });
         await PumpProject.updateMany({},{ $set: { totalPoints :0 } })
     }catch(err){
         logger.err(err)
