@@ -21,7 +21,7 @@ const {getProjectMetadata} = require("../services/project")
 
 const router = express.Router();
 
-router.get("/admin-login",async(req,res)=>{
+router.post("/admin-login",async(req,res)=>{
   const tgId =  req.body?.username;
   const password = req.body?.password;
   const resp = await generateAdminJWTToken(tgId, password);
@@ -54,9 +54,9 @@ router.put("/update-admin", authenticateAdmin, async(req,res)=>{
   return res.json(constant)
 })
 
-router.get("/admin-constant", authenticateAdmin, async(req,res)=>{
-  const user = req.user;
-  const constant = await Constants.findOne({adminTgId:user.tgId});
+router.get("/admin-constant", async(req,res)=>{
+  // const user = req.user;
+  const constant = await Constants.find({});
   return res.json(constant);
 })
 
@@ -158,6 +158,7 @@ router.get("/rank-me", authenticateToken,async (req, res) => {
 });
 
 router.get('/rank-players', async(req,res)=>{
+  console.log("rank-players")
   
   const leaderboard = await GameDay.aggregate([
     {
@@ -285,7 +286,10 @@ router.post("/update-project", authenticateToken,async (req, res) => {
   if (error) return res.status(400).json({ error: error.details[0].message });
   let project = await PumpProject.findOne({tokenAddress:req.body.tokenAddress})
   if(!project){
+    console.log("project not found")
+    console.log(req.body.tokenAddress, "tokenAddress")
     const meta = await getProjectMetadata(req.body.tokenAddress)
+    console.log(meta, "meta")
     project = new PumpProject({
       projectId: req.body.tokenAddress,
       tokenAddress: req.body.tokenAddress,
@@ -326,7 +330,7 @@ router.get("/projects", async (req, res) => {
         symbol:1,
         walletAddress: 1,
         projectName: "$name",
-        image: "imageUrl",
+        image: "$imageUrl",
       },
     },
   ]);
