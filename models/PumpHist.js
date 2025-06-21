@@ -13,6 +13,10 @@ const PumpHistSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  projectName: {
+    type: String,
+    required: false,
+  },
   createdAt: {
     type: Date,
     default: new Date(),

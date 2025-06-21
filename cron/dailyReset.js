@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const {sendTokens} = require('../services/web3')
 const GameDay = require('../models/GameDay');
 const PumpUser = require("../models/PumpUser");
+const PumpProject = require("../models/PumpProject");
 const logger = require("../services/logger");
 require('dotenv').config();
 
@@ -34,7 +35,7 @@ const sendReward = async()=>{
                 userId: 1,
                 score: 1,
                 playTime: 1,
-                walletAddress: 1,
+                walletAddress: '$user.walletAddress',
                 username: '$user.username'
               }
             }
@@ -49,7 +50,8 @@ const sendReward = async()=>{
 const reset = async()=>{
     try{
         await GameDay.deleteMany({});
-        await PumpUser.updateMany({}, { $set: { highestScore: 0 } });
+        await PumpUser.updateMany({}, { $set: { highestScore: 0, mcPoints: 0 } });
+        await PumpProject.updateMany({},{ $set: { totalPoints :0 } })
     }catch(err){
         logger.err(err)
     }

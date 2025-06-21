@@ -3,6 +3,9 @@ const {
     Keypair,
     PublicKey,
     sendAndConfirmTransaction,
+    Transaction,
+    LAMPORTS_PER_SOL,
+    SystemProgram
 } = require('@solana/web3.js');
 const {
     getOrCreateAssociatedTokenAccount,
@@ -21,9 +24,7 @@ console.log(process.env.ADMIN_PRIVATE_KEY, "process.env.ADMIN_PRIVATE_KEY")
   // Load admin wallet (adjust path if needed)
 // const secretKey = bs58.decode(process.env.ADMIN_PRIVATE_KEY);
 const secretKey = bs58.default.decode(process.env.ADMIN_PRIVATE_KEY);
-console.log(secretKey, "secretKey")
 const adminKeypair = Keypair.fromSecretKey(secretKey);
-console.log(adminKeypair, "adminKeypair")
   
   // Addresses
 const mintAddress = new PublicKey(process.env.TOKEN_MINT_ADDRESS);
@@ -31,47 +32,59 @@ const mintAddress = new PublicKey(process.env.TOKEN_MINT_ADDRESS);
   // 📤 Send 1000 tokens (adjust for decimals!)
 const sendTokens = async (walletAddress, amount) => {
     try{
+        console.log(walletAddress, "address wallet")
         const recipientAddress = new PublicKey(walletAddress);
-        amount = amount * (10 ** 9);
-      
+        amount = amount * LAMPORTS_PER_SOL
+
+        const transaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: adminKeypair.publicKey,
+            toPubkey: recipientAddress,
+            lamports: amount,
+          })
+        );
+        const signature = await sendAndConfirmTransaction(connection, transaction, [adminKeypair]);
+        console.log(`✅ Transfer successful! Tx Signature: ${signature}`);
         // Get or create ATA for sender and receiver
-        const senderTokenAccount = await getOrCreateAssociatedTokenAccount(
-          connection,
-          adminKeypair,
-          mintAddress,
-          adminKeypair.publicKey
-        );
+        // const senderTokenAccount = await getOrCreateAssociatedTokenAccount(
+        //   connection,
+        //   adminKeypair,
+        //   mintAddress,
+        //   adminKeypair.publicKey
+        // );
       
-        const recipientTokenAccount = await getOrCreateAssociatedTokenAccount(
-          connection,
-          adminKeypair,
-          mintAddress,
-          recipientAddress
-        );
+        // const recipientTokenAccount = await getOrCreateAssociatedTokenAccount(
+        //   connection,
+        //   adminKeypair,
+        //   mintAddress,
+        //   recipientAddress
+        // );
       
         // Transfer tokens
-        const tx = createTransferInstruction(
-          senderTokenAccount.address,
-          recipientTokenAccount.address,
-          adminKeypair.publicKey,
-          amount,
-          [],
-          TOKEN_PROGRAM_ID
-        );
+        // const tx = createTransferInstruction(
+        //   senderTokenAccount.address,
+        //   recipientTokenAccount.address,
+        //   adminKeypair.publicKey,
+        //   amount,
+        //   [],
+        //   TOKEN_PROGRAM_ID
+        // );
       
-        const signature = await sendAndConfirmTransaction(
-          connection,
-          {
-            recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
-            feePayer: adminKeypair.publicKey,
-            instructions: [tx],
-          },
-          [adminKeypair]
-        );
+        // const signature = await sendAndConfirmTransaction(
+        //   connection,
+        //   {
+        //     recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
+        //     feePayer: adminKeypair.publicKey,
+        //     instructions: [tx],
+        //   },
+        //   [adminKeypair]
+        // );
       
-        console.log('✅ Tokens sent. Tx signature:', signature);
+        // console.log('✅ Tokens sent. Tx signature:', signature);
     }catch(err){
-        logger.error('error sending rewards', { error });
+        console.log(walletAddress,amount, "address wallet")
+        console.log(err)
+        logger.error('error sending rewards', { err });
     }
 };
   

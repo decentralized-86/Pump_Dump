@@ -1,5 +1,7 @@
 const express = require("express");
 const PumpUser = require("../models/PumpUser");
+const Constants = require("../models/Constants");
+const Meme = require("../models/Meme");
 const GameDay = require('../models/GameDay');
 const GameSession = require("../models/GameSession");
 const logger = require("../services/logger");
@@ -14,9 +16,77 @@ const globalDayService = require("../services/globalDay");
 const twitterService = require("../services/twitter");
 const cache = require("../services/cache");
 const rateLimit = require("../middlewares/rateLimit");
-const { authenticateToken } = require("../utils/gen");
+const { authenticateToken,authenticateAdmin,generateAdminJWTToken } = require("../utils/gen");
+const {getProjectMetadata} = require("../services/project")
 
 const router = express.Router();
+
+router.post("/admin-login",async(req,res)=>{
+  const tgId =  req.body?.username;
+  const password = req.body?.password;
+  const resp = await generateAdminJWTToken(tgId, password);
+  const code = resp.success?200:403;
+  return res.status(code).json(resp)
+})
+
+router.delete("/delete-project/:address", authenticateAdmin, async(req,res)=>{
+  try{
+    const {address} = req.params;
+    const project = await PumpProject.findOne({tokenAddress: address})
+    await PumpUser.updateMany({projectId: project._id},{projectId: null, projectTokenAddress: null})
+    await PumpProject.deleteOne({ tokenAddress: address });
+    console.log("done")
+    return res.status(200).json({success:"true"});
+  }catch(err){
+    return res.status(500).json(err)
+  }
+});
+
+
+router.put("/update-admin", authenticateAdmin, async(req,res)=>{
+  const user = req.user;
+  const sponsor =  req.body?.sponsor;
+  const reward = req.body?.reward;
+  const constant = await Constants.findOne({adminTgId:user.tgId})
+  constant.sponsor = sponsor??null;
+  constant.reward = reward??constant.reward
+  await constant.save();
+  return res.json(constant)
+})
+
+router.get("/admin-constant", async(req,res)=>{
+  // const user = req.user;
+  const constant = await Constants.find({});
+  return res.json(constant);
+})
+
+router.post("/meme", authenticateAdmin, async(req,res)=>{
+  try{
+    const user = req.user;
+    const candleType = req.body?.candleType;
+    const text = req.body?.text;
+    const what = req.body?.what||null;
+    const pos = req.body?.pos||null;
+    let meme = new Meme({
+      candleType,
+      text,
+      what,
+      pos
+    });
+    await meme.save()
+    return res.json(meme)
+  }catch(err){
+    res.status(500).json(err)
+  }
+})
+
+router.get("/all-memes",authenticateToken, async(req,res)=>{
+  const meme = await Meme.find({});
+  const CandlesRed = meme.filter((ele)=>ele.candleType=='red')
+  const CandlesGreen =  meme.filter((ele)=>ele.candleType=='green')
+  const MovingTexts =  meme.filter((ele)=>ele.candleType=='moving')
+  return res.json({CandlesRed,CandlesGreen, MovingTexts})
+})
 
 router.get("/rank-me", authenticateToken,async (req, res) => {
   const userData = req.user;
@@ -72,9 +142,11 @@ router.get("/rank-me", authenticateToken,async (req, res) => {
       userId: user.tgId,
       userRank: userRank[0]?.rank + 1 || 1,
       projectRank: projectRank[0]?.rank + 1 || 1,
+      username: user.username,
       userScore: user.highestScore,
       projectId: user.projectId || null,
       projectName: userProject?.name,
+      projectImage: userProject?.imageUrl,
       projectPoints: userProject?.totalPoints || 0,
       avatar: user.avatar,
     }
@@ -86,6 +158,7 @@ router.get("/rank-me", authenticateToken,async (req, res) => {
 });
 
 router.get('/rank-players', async(req,res)=>{
+  console.log("rank-players")
   
   const leaderboard = await GameDay.aggregate([
     {
@@ -124,7 +197,8 @@ router.get('/rank-players', async(req,res)=>{
         avatar: "$user.avatar",
         projectTokenAddress: "$user.projectTokenAddress",
         totalPoints: "$project.totalPoints",
-        projectName: "$project.name"
+        projectName: "$project.name",
+        projectImage: "$project.imageUrl"
       }
     },
     {
@@ -142,7 +216,7 @@ router.get('/rank-players', async(req,res)=>{
 });
 
 router.get('/rank-projects',async (req,res)=>{
-  const projects = await PumpProject.find({})
+  const projects = await PumpProject.find({ totalPoints: { $gt: 0 } })
   .sort({ totalPoints: -1 })
   .limit(10);
   return res.json(projects)
@@ -155,10 +229,12 @@ router.get("/", authenticateToken,async (req, res) => {
   const gameDay = await GameDay.findOne().sort({ score: -1 });
   const resp = {
     telegramId: user.userId,
-    maxScore: gameDay.score || 0,
-    maxTime: gameDay.playTime || 0,
+    username: userData?.username,
+    firstName:userData?.firstName,
+    maxScore: gameDay?.score || 0,
+    maxTime: gameDay?.playTime || 0,
     remainTime: ms,
-    avatar: user.avatar,
+    avatar: userData?.avatar,
   };
   return res.json(resp);
 });
@@ -209,7 +285,24 @@ router.post("/update-project", authenticateToken,async (req, res) => {
   const { error } = updateSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
   let project = await PumpProject.findOne({tokenAddress:req.body.tokenAddress})
-
+  if(!project){
+    console.log("project not found")
+    console.log(req.body.tokenAddress, "tokenAddress")
+    const meta = await getProjectMetadata(req.body.tokenAddress)
+    console.log(meta, "meta")
+    project = new PumpProject({
+      projectId: req.body.tokenAddress,
+      tokenAddress: req.body.tokenAddress,
+      playerCount:1,
+      name: meta?.name,
+      symbol: meta?.symbol,
+      imageUrl: meta?.uri,
+    })
+    await project.save()
+  }else {
+    project.playerCount = project.playerCount+1;
+    await project.save()
+  }
   if (user?.projectTokenAddress === req.body.tokenAddress) {
     return res.json({
       success: false,
@@ -217,22 +310,12 @@ router.post("/update-project", authenticateToken,async (req, res) => {
     });
   }
   user.projectTokenAddress = req.body.tokenAddress;
-  if(!project){
-    project = new PumpProject({
-      projectId: req.body.tokenAddress,
-      tokenAddress: req.body.tokenAddress,
-      playerCount:1
-    })
-    await project.save()
-  }else {
-    project.playerCount = project.playerCount+1;
-    await project.save()
-  }
-  user.projectId = project._id
+  user.projectId = project._id;
   await user.save();
   return res.json({
     success: true,
     message: "Selected updated project successfully",
+    project:project,
   });
 });
 
@@ -243,8 +326,11 @@ router.get("/projects", async (req, res) => {
         projectId: 1,
         name: 1,
         points: 1,
+        score: 1,
+        symbol:1,
         walletAddress: 1,
         projectName: "$name",
+        image: "$imageUrl",
       },
     },
   ]);
@@ -392,13 +478,15 @@ router.post("/update-play", authenticateToken ,async (req, res) => {
     const gameDay = new GameDay({
       userId: userData._id,
       score: score,
-      playTime: playTime
+      playTime: playTime,
+      projectName: project?.name || null,
     });
     await gameDay.save()
     const hist = new PumpHist({
       tgId: user.userId,
       score,
       playTime,
+      projectName: project?.name || null,
     });
     await hist.save();
     return res.json({
@@ -446,12 +534,22 @@ router.get("/history", authenticateToken,async (req, res) => {
         },
       },
       {
+        $lookup: {
+          from: "pumpprojects",
+          localField: "user.projectId",
+          foreignField: "_id",
+          as: "project"
+        }
+      },
+      { $unwind: { path: "$project", preserveNullAndEmptyArrays: true } },
+      {
         $project: {
           //date: "$createdAt",
-          projectName: "$name",
-          name: "$user.name",
+          pName: "$projectName",
+          name: "$user.username",
           score: "$score",
           avatar: "$user.avatar",
+          projectName: "$project.name",
           date: {
             $dateToString: {
               format: "%Y-%m-%d %H:%M:%S",
@@ -858,7 +956,6 @@ router.post("/verify-tweet", async (req, res) => {
 router.get("/projects", async (req, res) => {
   try {
     const projects = await PumpProject.find()
-      .select('projectId name imageUrl dailyPoints playerCount')
       .sort('-dailyPoints');
       
     return res.json(projects);
@@ -910,6 +1007,7 @@ router.get('/profileData', authenticateToken, async (req, res) => {
             displayName: userData?.displayName,
             freePlaysRemaining: userData?.freePlaysRemaining,
             walletAddress: userData?.walletAddress || "",
+            projectName: project?.name || "",
             maxScore: userData.mcPoints,
             tokenAddress: userData.projectTokenAddress || "",
             projectPoints: project?.totalPoints || 0,
