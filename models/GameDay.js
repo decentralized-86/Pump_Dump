@@ -17,7 +17,7 @@ const gameDaySchema = new mongoose.Schema(
     },
     projectName: {
       type: String,
-      required: true,
+      required: false,
     }
   },
   {
