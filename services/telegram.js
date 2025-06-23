@@ -395,6 +395,7 @@ const config = require('../config');
 const logger = require('./logger');
 const gameService = require('./game');
 const PumpUser = require('../models/PumpUser');
+const Constants = require("../models/Constants");
 const twitterService = require('./twitter');
 const Wallet = require('../models/Wallet')
 require('dotenv').config();
@@ -734,13 +735,13 @@ const initializeBot = () => {
 
               // Verify the tweet
               const result = await twitterService.verifyTweet(messageText, userId);
-              console.log(result, "result")
+              const constant = await Constants.find({})
               
               if (result.success) {
                 // Update user's free plays and tweet verification status
                 
                 if (user) {
-                  user.freePlaysRemaining += 10;
+                  user.freePlaysRemaining += constant[0].tweetFreePlays;
                   user.tweetVerifiedToday = true;
                   user.lastTweetVerification = new Date();
                   user.twitterUsername = result.authorUsername;
@@ -749,7 +750,7 @@ const initializeBot = () => {
                   await ctx.reply(
                     '✅ *Tweet Verified Successfully!*\n\n' +
                     'Thank you for sharing! You\'ve received:\n' +
-                    '• +10 free plays\n\n' +
+                    `• +${constant[0].tweetFreePlays} free plays\n\n` +
                     'Your new balance:\n' +
                     `• ${user.freePlaysRemaining} free plays remaining`,
                     { parse_mode: 'Markdown' }

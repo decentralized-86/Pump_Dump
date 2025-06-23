@@ -21,6 +21,14 @@ const constantsSchema = new mongoose.Schema(
     adminUserName: {
       type: String,
       required: true
+    },
+    freePlays: {
+      type: Number,
+      required: true,
+    },
+    tweetFreePlays: {
+      type: Number,
+      requied:true
     }
   },
   {
