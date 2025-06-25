@@ -70,6 +70,7 @@ const PumpUserSchema = new mongoose.Schema({
   freePlaysRemaining: {
     type: Number,
     default: 10,
+    min: [0, 'freePlaysRemaining cannot be negative'],
   },
   currentGlobalDayId: {
     type: mongoose.Schema.Types.ObjectId,

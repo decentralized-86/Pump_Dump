@@ -545,6 +545,11 @@ router.post("/update-play", authenticateToken ,async (req, res) => {
   if (error) return res.status(400).json({ error: error.details[0].message });
   try {
     const { score, playTime } = req.body;
+    if(userData.freePlaysRemaining>0){
+      return res.status(500).json({
+        error: "you do not have plays remaining",
+      });
+    }
     if (score < 1) {
       return res.json({
         success: true,

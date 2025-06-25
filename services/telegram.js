@@ -819,9 +819,10 @@ const initializeBot = () => {
             data: {}
           });
 
-          const adminWallet = config.adminWallet;
+          const adminWallet = process.env.BURNER_ADDRESS;
           //store this into DB and fetch it from DB
-          const solAmount = '0.005';
+          const constant = await Constants.find({})
+          const solAmount = constant[0].buyAmount
           
           await ctx.reply(
             '💰 *Buy Unlimited Plays*\n\n' +

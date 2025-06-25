@@ -28,7 +28,11 @@ const constantsSchema = new mongoose.Schema(
     },
     tweetFreePlays: {
       type: Number,
-      requied:true
+      requied:true,
+    },
+    buyAmount: {
+      type: Number,
+      required: true
     }
   },
   {

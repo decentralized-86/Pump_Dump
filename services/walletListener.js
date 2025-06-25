@@ -7,6 +7,7 @@ const {
 const { getAssociatedTokenAddress } = require('@solana/spl-token');
 const PumpUser = require('../models/PumpUser');
 const Wallet = require('../models/Wallet')
+const Constants = require("../models/Constants");
 require('dotenv').config();
 const { bot } = require('./telegram');
 
@@ -77,6 +78,7 @@ async function startListener() {
           ) {
             const { signers, destination, tokenAmount } = ix.parsed.info;
             if (destination === ata.toBase58()) {
+              const constant = await Constants.find({})
               if(Number(tokenAmount.amount)==process.env.VALIDATE_WALLET_AMOUNT*(10**9)){
                 let wallet = await Wallet.findOne({ walletAddress: signers[0], status: false });
                 if(!wallet) return;
@@ -95,7 +97,7 @@ async function startListener() {
                 await bot.telegram.sendMessage(user.tgId, "✅ Your wallet has been verified and linked successfully! You can now play and earn rewards.")
                 console.log("new user wallet has been registered")
               }
-              else if(Number(tokenAmount.amount)==process.env.BUY_AMOUNT){
+              else if(Number(tokenAmount.amount)==constant[0].buyAmount*(10**9)){
                 let user = await PumpUser.findOne({walletAddress: signers[0]});
                 user.accessType = 'paid';
                 await user.save();
