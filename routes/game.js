@@ -73,6 +73,7 @@ router.put("/update-admin", authenticateAdmin, async(req,res)=>{
 router.get("/admin-constant", async(req,res)=>{
   // const user = req.user;
   const constant = await Constants.find({});
+  console.log(constant)
   return res.json(constant);
 })
 

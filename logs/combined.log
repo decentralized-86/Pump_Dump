@@ -3349,3 +3349,43 @@
 {"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-25T14:03:14.846Z"}
 {"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-25T14:03:15.034Z","username":"Solpump1_bot"}
 {"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-25T14:03:15.035Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-27T06:11:00.591Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-27T06:11:00.596Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-27T06:11:00.596Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-27T06:11:00.597Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-27T06:11:01.324Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-27T06:11:01.327Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-27T06:11:01.498Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-27T06:11:01.499Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-27T06:11:45.898Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-27T06:11:45.904Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-27T06:11:45.904Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-27T06:11:45.905Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-27T06:11:46.634Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-27T06:11:46.636Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-27T06:11:46.821Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-27T06:11:46.822Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-27T06:14:46.426Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-27T06:14:46.430Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-27T06:14:46.430Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-27T06:14:46.430Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-27T06:14:47.266Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-27T06:14:47.267Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-27T06:14:47.478Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-27T06:14:47.478Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-27T06:15:42.685Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-27T06:15:42.691Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-27T06:15:42.691Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-27T06:15:42.692Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-27T06:15:43.449Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-27T06:15:43.450Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-27T06:15:43.639Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-27T06:15:43.639Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-06-27T06:16:23.058Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-06-27T06:16:23.061Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-06-27T06:16:23.061Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-06-27T06:16:23.062Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-06-27T06:16:23.792Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-06-27T06:16:23.793Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"SolPump Game","has_main_web_app":false,"id":8143044450,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-06-27T06:16:23.978Z","username":"Solpump1_bot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-06-27T06:16:23.978Z"}

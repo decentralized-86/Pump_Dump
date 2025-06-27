@@ -33,6 +33,10 @@ const constantsSchema = new mongoose.Schema(
     buyAmount: {
       type: Number,
       required: true
+    },
+    sponsorImageUrl: {
+      type: String,
+      required: true,
     }
   },
   {
