@@ -8,6 +8,7 @@ const {
     SystemProgram
 } = require('@solana/web3.js');
 const {
+    getAccount,
     getOrCreateAssociatedTokenAccount,
     createTransferInstruction,
     TOKEN_PROGRAM_ID,
@@ -15,7 +16,8 @@ const {
 require('dotenv').config();
 const fs = require('fs');
 const logger = require('./logger');
-const bs58 = require("bs58")
+const bs58 = require("bs58");
+const Constants = require("../models/Constants");
   // ⚙️ Setup
 const connection = new Connection(process.env.HELIUS_RPC, 'confirmed');
 
@@ -87,5 +89,18 @@ const sendTokens = async (walletAddress, amount) => {
         logger.error('error sending rewards', { err });
     }
 };
+
+const checkTokenHold = async(ata)=>{
+  try{
+    const tokenAccount = await getAccount(connection, ata);
+    const constant = await Constants.find({})
+    const hasToken = tokenAccount.amount > constant[0].tokenHolderAmount;
+    console.log("is token holder:", hasToken)
+    return hasToken;
+  }catch(err){
+    console.log(err)
+    return false
+  }
+}
   
-module.exports = {sendTokens}
+module.exports = {sendTokens,checkTokenHold}

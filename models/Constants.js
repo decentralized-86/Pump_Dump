@@ -37,6 +37,10 @@ const constantsSchema = new mongoose.Schema(
     sponsorImageUrl: {
       type: String,
       required: true,
+    },
+    tokenHolderAmount: {
+      type:Number,
+      required:true
     }
   },
   {

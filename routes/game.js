@@ -32,6 +32,48 @@ router.post("/make-golden", authenticateAdmin,async(req,res)=>{
   }catch(err){
     return err
   }
+});
+
+router.get("/get-winner",authenticateAdmin, async(req,res)=>{
+  try{
+    const topUser = await GameDay.aggregate([
+        {
+          $sort: {
+            score: -1,       
+            playTime: 1  
+          }
+        },
+        {
+          $limit: 1  
+        },
+        {
+          $lookup: {
+            from: 'pumpusers',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $unwind: '$user'
+        },
+        {
+          $project: {
+            _id: 0,
+            userId: 1,
+            score: 1,
+            playTime: 1,
+            walletAddress: '$user.walletAddress',
+            username: '$user.username'
+          }
+        }
+    ]);
+    const constant = await Constants.find({})
+    return res.status(200).json({winnerWalletAddress:topUser[0].walletAddress, amount: constant[0].reward })
+  }catch(err){
+    logger.error(err)
+    return res.status(500).json()
+  }   
 })
 
 router.post("/admin-login",async(req,res)=>{
@@ -61,11 +103,13 @@ router.put("/update-admin", authenticateAdmin, async(req,res)=>{
   const reward = req.body?.reward;
   const freeplays = req.body?.freeplays;
   const tweetFreePlays = req.body?.tweetFreePlays;
+  const sponsorUrl = req.body.sponsorUrl||null;
   const constant = await Constants.findOne({adminTgId:user.tgId})
   constant.sponsor = sponsor??null;
   constant.reward = reward??constant.reward;
   constant.freePlays = freeplays?? constant.freePlays;
   constant.tweetFreePlays = tweetFreePlays?? constant.tweetFreePlays;
+  constant.sponsorImageUrl = sponsorUrl??constant.sponsorImageUrl;
   await constant.save();
   return res.json(constant)
 })
@@ -565,12 +609,22 @@ router.post("/update-play", authenticateToken ,async (req, res) => {
       project.totalPoints += score;
       await project.save();
     }
-    await PumpUser.updateOne(
-      { tgId: user.userId },
-      {
-        $set: { highestScore: Math.max(userData.highestScore, score), totalPlayTime: userData.totalPlayTime+playTime, mcPoints: userData.mcPoints + score, freePlaysRemaining: userData.freePlaysRemaining - 1 },
-      }
-    );
+    if(userData.accessType=="free"){
+      await PumpUser.updateOne(
+        { tgId: user.userId },
+        {
+          $set: { highestScore: Math.max(userData.highestScore, score), totalPlayTime: userData.totalPlayTime+playTime, mcPoints: userData.mcPoints + score, freePlaysRemaining: userData.freePlaysRemaining - 1 },
+        }
+      );
+    }else{
+      await PumpUser.updateOne(
+        { tgId: user.userId },
+        {
+          $set: { highestScore: Math.max(userData.highestScore, score), totalPlayTime: userData.totalPlayTime+playTime, mcPoints: userData.mcPoints + score},
+        }
+      );
+    }
+    
     const gameDay = new GameDay({
       userId: userData._id,
       score: score,
