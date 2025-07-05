@@ -369,7 +369,8 @@ router.get("/", authenticateToken,async (req, res) => {
     avatar: userData?.avatar,
     gameRemaining: userData?.freePlaysRemaining,
     projectName: project?.name||null,
-    projectImage: project?.imageUrl||null
+    projectImage: project?.imageUrl||null,
+    accessType: userData?.accessType,
   };
   return res.json(resp);
 });
@@ -466,6 +467,7 @@ router.get("/projects", async (req, res) => {
         walletAddress: 1,
         projectName: "$name",
         image: "$imageUrl",
+        isGolden: "$isGolden",
       },
     },
   ]);
@@ -590,7 +592,8 @@ router.post("/update-play", authenticateToken ,async (req, res) => {
   if (error) return res.status(400).json({ error: error.details[0].message });
   try {
     const { score, playTime } = req.body;
-    if(userData.freePlaysRemaining>0){
+    console.log(userData.freePlaysRemaining, "freePlaysRemaining")
+    if(Number(userData.freePlaysRemaining) <= 0){
       return res.status(500).json({
         error: "you do not have plays remaining",
       });

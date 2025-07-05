@@ -447,8 +447,8 @@ setInterval(() => {
 // Helper to generate game URL with auth token
 const generateGameUrl = (userId) => {
   const token = jwt.sign({ userId }, config.jwtSecret, { expiresIn: '24h' });
-  console.log(`${config.webAppUrl}/game?token=${token}`, "url")
-  return `${config.webAppUrl}/game?token=${token}`;
+  console.log(`${config.webAppUrl}/splash?token=${token}`, "url")
+  return `${config.webAppUrl}/splash?token=${token}`;
 };
 
 // Validate Solana address
@@ -685,12 +685,10 @@ const initializeBot = () => {
               await ctx.reply(
                 '✅ *Wallet Address Received*\n\n' +
                 'Your wallet has been linked successfully!\n\n' +
-                '_Note: You will be eligible for rewards once you transfer tokens._\n\n' +
+                '_Note: You will be eligible for rewards once you Link Wallet._\n\n' +
                 `Please transfer ${requiredTokens} Pumpshie tokens to:\n` +
                 `\`${burnWallet}\`\n\n` +
-                '• Token transfers are monitored automatically\n' +
-                '• Rewards will be credited  every 24 hours if you win\n' +
-                '• You can continue playing  if you have free plays or unlimited access',
+                `Note: Make sure to send the exact amount for automatic verification.`,
                 { parse_mode: 'Markdown' }
               );
 
@@ -825,13 +823,11 @@ const initializeBot = () => {
           const solAmount = constant[0].buyAmount
           
           await ctx.reply(
-            '💰 *Buy Unlimited Plays*\n\n' +
-            'Get 24 hours of unlimited plays:\n\n' +
+            '*💰 Buy Unlimited Plays for the remainder of*\n\n' +
+            'Get Unlimited plays for the remainder of the timer. \n' +
+            'Please note the timer is a 24 hour clock and buying right now only grants play for the current time left\n\n' +
             `Please send ${solAmount} SOL to:\n` +
             `\`${adminWallet}\`\n\n` +
-            '• Transaction is monitored automatically\n' +
-            '• Access will be granted instantly after verification\n' +
-            '• You can continue using free plays while waiting\n\n' +
             '_Note: Make sure to send the exact amount for automatic verification_',
             { 
               parse_mode: 'Markdown',
@@ -857,7 +853,7 @@ const initializeBot = () => {
             data: {}
           });
 
-          const tweetText = `🎮 Just discovered @SolPumpGame - an amazing P2E game on @Solana! Join me and earn rewards while having fun! 🚀\n\n#Solana #GameFi #P2E`;
+          const tweetText = `🎮 Just found the wildest game in crypto from @Pumpshiedotfun – the OG mascot of @Pumpdotfun!\n\nCompete daily for big prizes, hilarious memes, and leaderboard glory! Play for your fav project and pump that bag 💰🚀\n\n#Pumpshie #Solana #Pumpfun #P2E #PPP`;
           
           await ctx.reply(
             '🐦 *Tweet to Get Free Plays*\n\n' +
@@ -865,8 +861,8 @@ const initializeBot = () => {
             '1. Copy and tweet this message:\n' +
             '```\n' + tweetText + '\n```\n\n' +
             '2. Reply with your tweet URL\n' +
-            '3. Get 5 free plays after verification!\n\n' +
-            '_Note: This offer is available once per day_',
+            '3. Get 10 free plays after verification!\n\n' +
+            '_Note: This offer is only available once per day_',
             { parse_mode: 'Markdown' }
           );
           break;
