@@ -4,6 +4,7 @@ const GameDay = require('../models/GameDay');
 const PumpUser = require("../models/PumpUser");
 const PumpProject = require("../models/PumpProject");
 const logger = require("../services/logger");
+const Constants = require("../models/Constants");
 require('dotenv').config();
 
 const sendReward = async()=>{
@@ -41,7 +42,8 @@ const sendReward = async()=>{
             }
         ]);
         console.log(topUser, "topuser from cron")
-        await sendTokens(topUser[0].walletAddress,process.env.REWARD_AMOUNT)
+        const constant = await Constants.find({})
+        await sendTokens(topUser[0].walletAddress, constant[0].reward)
     }catch(err){
         logger.error(err)
     }   
@@ -51,6 +53,10 @@ const reset = async()=>{
     try{
         await GameDay.deleteMany({});
         await PumpUser.updateMany({}, { $set: { highestScore: 0, mcPoints: 0 } });
+        await PumpUser.updateMany(
+          { accessType: "paid" },         
+          { $set: { accessType: "free" } } 
+        );
         await PumpProject.updateMany({},{ $set: { totalPoints :0 } })
     }catch(err){
         logger.err(err)
@@ -60,9 +66,6 @@ const reset = async()=>{
 const scheduleDailyReset = () => {
   cron.schedule('0 0 * * *', async () => {
     console.log('🔁 Running daily reset at midnight...');
-
-    console.log("sending rewards...")
-    await sendReward();
 
     console.log('reseting DB...')
     await reset();

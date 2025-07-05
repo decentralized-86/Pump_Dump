@@ -21,6 +21,26 @@ const constantsSchema = new mongoose.Schema(
     adminUserName: {
       type: String,
       required: true
+    },
+    freePlays: {
+      type: Number,
+      required: true,
+    },
+    tweetFreePlays: {
+      type: Number,
+      requied:true,
+    },
+    buyAmount: {
+      type: Number,
+      required: true
+    },
+    sponsorImageUrl: {
+      type: String,
+      required: true,
+    },
+    tokenHolderAmount: {
+      type:Number,
+      required:true
     }
   },
   {

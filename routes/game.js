@@ -21,6 +21,61 @@ const {getProjectMetadata} = require("../services/project")
 
 const router = express.Router();
 
+router.post("/make-golden", authenticateAdmin,async(req,res)=>{
+  try{
+    const tokenAddress = req.body?.tokenAddress;
+    let project = await PumpProject.findOne({tokenAddress: tokenAddress});
+    if(!project) return res.status(404).json({msg:"project not found"})
+    project.isGolden = true;
+    await project.save();
+    return res.status(200).json({msg: "project is made golden"})
+  }catch(err){
+    return err
+  }
+});
+
+router.get("/get-winner",authenticateAdmin, async(req,res)=>{
+  try{
+    const topUser = await GameDay.aggregate([
+        {
+          $sort: {
+            score: -1,       
+            playTime: 1  
+          }
+        },
+        {
+          $limit: 1  
+        },
+        {
+          $lookup: {
+            from: 'pumpusers',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $unwind: '$user'
+        },
+        {
+          $project: {
+            _id: 0,
+            userId: 1,
+            score: 1,
+            playTime: 1,
+            walletAddress: '$user.walletAddress',
+            username: '$user.username'
+          }
+        }
+    ]);
+    const constant = await Constants.find({})
+    return res.status(200).json({winnerWalletAddress:topUser[0].walletAddress, amount: constant[0].reward })
+  }catch(err){
+    logger.error(err)
+    return res.status(500).json()
+  }   
+})
+
 router.post("/admin-login",async(req,res)=>{
   const tgId =  req.body?.username;
   const password = req.body?.password;
@@ -35,7 +90,6 @@ router.delete("/delete-project/:address", authenticateAdmin, async(req,res)=>{
     const project = await PumpProject.findOne({tokenAddress: address})
     await PumpUser.updateMany({projectId: project._id},{projectId: null, projectTokenAddress: null})
     await PumpProject.deleteOne({ tokenAddress: address });
-    console.log("done")
     return res.status(200).json({success:"true"});
   }catch(err){
     return res.status(500).json(err)
@@ -47,9 +101,15 @@ router.put("/update-admin", authenticateAdmin, async(req,res)=>{
   const user = req.user;
   const sponsor =  req.body?.sponsor;
   const reward = req.body?.reward;
+  const freeplays = req.body?.freeplays;
+  const tweetFreePlays = req.body?.tweetFreePlays;
+  const sponsorUrl = req.body.sponsorUrl||null;
   const constant = await Constants.findOne({adminTgId:user.tgId})
   constant.sponsor = sponsor??null;
-  constant.reward = reward??constant.reward
+  constant.reward = reward??constant.reward;
+  constant.freePlays = freeplays?? constant.freePlays;
+  constant.tweetFreePlays = tweetFreePlays?? constant.tweetFreePlays;
+  constant.sponsorImageUrl = sponsorUrl??constant.sponsorImageUrl;
   await constant.save();
   return res.json(constant)
 })
@@ -57,6 +117,7 @@ router.put("/update-admin", authenticateAdmin, async(req,res)=>{
 router.get("/admin-constant", async(req,res)=>{
   // const user = req.user;
   const constant = await Constants.find({});
+  console.log(constant)
   return res.json(constant);
 })
 
@@ -67,17 +128,87 @@ router.post("/meme", authenticateAdmin, async(req,res)=>{
     const text = req.body?.text;
     const what = req.body?.what||null;
     const pos = req.body?.pos||null;
+    const image = req.body?.image || null
     let meme = new Meme({
       candleType,
       text,
       what,
-      pos
+      pos,
+      image,
     });
     await meme.save()
     return res.json(meme)
   }catch(err){
     res.status(500).json(err)
   }
+})
+
+router.put("/meme/:id", authenticateAdmin, async (req, res) => {
+  try {
+    const memeId = req.params.id;
+    const allowedFields = ["candleType", "text", "what", "pos", "image"];
+    const updateData = {};
+
+    // Only include fields that are actually provided
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    const updatedMeme = await Meme.findByIdAndUpdate(memeId, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedMeme) {
+      return res.status(404).json({ message: "Meme not found" });
+    }
+
+    return res.json(updatedMeme);
+  } catch (err) {
+    console.error("Error updating meme:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+router.delete("/meme/:id", authenticateAdmin, async (req, res) => {
+  try {
+    const memeId = req.params.id;
+    const deletedMeme = await Meme.findByIdAndDelete(memeId);
+
+    if (!deletedMeme) {
+      return res.status(404).json({ message: "Meme not found" });
+    }
+
+    return res.json({ message: "Meme deleted successfully", meme: deletedMeme });
+  } catch (err) {
+    console.error("Error deleting meme:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.patch("/add-freeplays/:username", authenticateAdmin, async(req,res)=>{
+  try{
+    const username = req.params.username;
+    const constant = await Constants.find({})
+    const freeplaysToAdd = constant[0].freePlays;
+    const user = await PumpUser.findOneAndUpdate(
+      { username: username },
+      { $inc: { freePlaysRemaining: freeplaysToAdd } },
+      { new: true }
+    );
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.status(200).json(user);
+  }catch(err){
+    console.log(err)
+    return res.status(500).json({message: "Server error"})
+  }
+
 })
 
 router.get("/all-memes",authenticateToken, async(req,res)=>{
@@ -227,6 +358,7 @@ router.get("/", authenticateToken,async (req, res) => {
   const userData = await PumpUser.findOne({tgId:user.userId})
   const ms = await remainTimeMs(user.tgId);
   const gameDay = await GameDay.findOne().sort({ score: -1 });
+  const project = await PumpProject.findOne({_id: userData?.projectId})
   const resp = {
     telegramId: user.userId,
     username: userData?.username,
@@ -235,6 +367,10 @@ router.get("/", authenticateToken,async (req, res) => {
     maxTime: gameDay?.playTime || 0,
     remainTime: ms,
     avatar: userData?.avatar,
+    gameRemaining: userData?.freePlaysRemaining,
+    projectName: project?.name||null,
+    projectImage: project?.imageUrl||null,
+    accessType: userData?.accessType,
   };
   return res.json(resp);
 });
@@ -331,6 +467,7 @@ router.get("/projects", async (req, res) => {
         walletAddress: 1,
         projectName: "$name",
         image: "$imageUrl",
+        isGolden: "$isGolden",
       },
     },
   ]);
@@ -455,6 +592,12 @@ router.post("/update-play", authenticateToken ,async (req, res) => {
   if (error) return res.status(400).json({ error: error.details[0].message });
   try {
     const { score, playTime } = req.body;
+    console.log(userData.freePlaysRemaining, "freePlaysRemaining")
+    if(Number(userData.freePlaysRemaining) <= 0){
+      return res.status(500).json({
+        error: "you do not have plays remaining",
+      });
+    }
     if (score < 1) {
       return res.json({
         success: true,
@@ -469,12 +612,22 @@ router.post("/update-play", authenticateToken ,async (req, res) => {
       project.totalPoints += score;
       await project.save();
     }
-    await PumpUser.updateOne(
-      { tgId: user.userId },
-      {
-        $set: { highestScore: Math.max(userData.highestScore, score), totalPlayTime: userData.totalPlayTime+playTime, mcPoints: userData.mcPoints + score, freePlaysRemaining: userData.freePlaysRemaining - 1 },
-      }
-    );
+    if(userData.accessType=="free"){
+      await PumpUser.updateOne(
+        { tgId: user.userId },
+        {
+          $set: { highestScore: Math.max(userData.highestScore, score), totalPlayTime: userData.totalPlayTime+playTime, mcPoints: userData.mcPoints + score, freePlaysRemaining: userData.freePlaysRemaining - 1 },
+        }
+      );
+    }else{
+      await PumpUser.updateOne(
+        { tgId: user.userId },
+        {
+          $set: { highestScore: Math.max(userData.highestScore, score), totalPlayTime: userData.totalPlayTime+playTime, mcPoints: userData.mcPoints + score},
+        }
+      );
+    }
+    
     const gameDay = new GameDay({
       userId: userData._id,
       score: score,

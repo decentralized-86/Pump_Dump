@@ -60,9 +60,7 @@ const authenticateAdmin = async(req,res,next)=>{
     if (err) {
       return res.status(403).json({ message: "Access Denied: Invalid Token" });
     }
-    console.log("user:", user)
     const constant = await Constants.findOne({adminTgId:user.userId});
-    console.log(constant)
     if(!constant) return res
     .status(401)
     .json({ message: "Access Denied: Not an admin" });

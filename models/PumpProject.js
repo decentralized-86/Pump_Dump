@@ -39,6 +39,11 @@ const PumpProjectSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  isGolden:{
+    type: Boolean,
+    default: false,
+    required: false
+  },
   // rank: {
   //   type: Number,
   //   default: 0

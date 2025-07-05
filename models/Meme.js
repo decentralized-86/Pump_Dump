@@ -18,6 +18,10 @@ const memeSchema = new mongoose.Schema(
     pos: {
         type: String,
         required: false,
+    },
+    image: {
+      type: String,
+      required: false
     }
   },
   {

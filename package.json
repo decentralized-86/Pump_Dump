@@ -4,8 +4,8 @@
   "description": "Telegram-based web game with Solana integration",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
     "build": "pkg -t node12-win-x64 --output solpump server.js",
     "test": "jest"
   },
