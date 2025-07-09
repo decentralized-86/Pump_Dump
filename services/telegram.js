@@ -711,10 +711,9 @@ Grab some early—prices will go up!
               
               await ctx.reply(
                 '✅ *Wallet Address Received*\n\n' +
-                'Your wallet has been linked successfully!\n\n' +
                 '_Note: You will be eligible for rewards once you Link Wallet._\n\n' +
-                `Please transfer ${requiredTokens} Pumpshie tokens to:\n` +
-                `\`${burnWallet}\`\n\n` +
+                `Please send ${requiredTokens} Pumpshie tokens to:\n` +
+                `\`${burnWallet}\`. \n\nYou have 5 minutes \n\n` +
                 `Note: Make sure to send the exact amount for automatic verification.`,
                 { parse_mode: 'Markdown' }
               );
@@ -831,8 +830,8 @@ Grab some early—prices will go up!
           
           await ctx.reply(
             '🔗 *Link Your Wallet*\n\n' +
-            'Please enter your wallet address to begin the linking process.\n\n' +
-            'Reply with your Solana wallet address.',
+            'Please replay with your public Solana wallet address below.\n\n' +
+            'We will ask you to send a very small amount of Pumpshie to a wallet \nand you will have a few minutes to complete the transaction. \n\nOnce completed you will receive a confirmation that your wallet is linked to this Telegram ID',
             { parse_mode: 'Markdown' }
           );
           break;
