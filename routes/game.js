@@ -321,6 +321,7 @@ router.get('/rank-players', async(req,res)=>{
       $project: {
         _id: 0,
         userId: "$_id",
+        tgId: "$user.tgId",
         score: 1,
         playTime: 1,
         displayName: "$user.displayName",
