@@ -498,8 +498,35 @@ const initializeBot = () => {
       logger.info('Generated game URL:', gameUrl);
       
       logger.info('Sending welcome message');
+      const constant = await Constants.find({})
+      const pumpshieMessage = `
+🚀 Welcome to Pumpshie Pumps! 
+Compete for the top score every day and win a huge cash prize!
+The leaderboards reset every 24 hours—so every day is a new chance to win!
+
+💼 Represent Your Favorite Project  
+Play to pump your bag and help your project climb the team leaderboard.  
+Every play counts toward team visibility!
+
+😂 Enjoy the Best Crypto Memes  
+Hilarious. Relevant. 100% degenerate-approved.
+
+🐦 Tweet and earn X extra plays!
+
+💰 Pay ${constant[0].buyAmount} SOL for unlimited plays until the end of the day.
+
+🪙 Hold 100,000 $Pumpshie tokens to unlock unlimited plays forever!  
+Grab some early—prices will go up!
+
+⚠️ Note: To win the daily jackpot, wallet linking is required.  
+(No wallet connection needed—just a quick verification.)
+
+🎮 You have ${user.freePlaysRemaining} free plays remaining.
+`;
+
       await ctx.reply(
-        `Welcome to SolPump! 🎮\n\nPlay to earn rewards and compete with others!\n\nYou have:\n- ${user.freePlaysRemaining} free plays remaining\n- Current high score: ${user.highestScore}`,
+        pumpshieMessage,
+        // `Welcome to SolPump! 🎮\n\nPlay to earn rewards and compete with others!\n\nYou have:\n- ${user.freePlaysRemaining} free plays remaining\n- Current high score: ${user.highestScore}`,
         {
           reply_markup: {
             inline_keyboard: [
@@ -792,7 +819,7 @@ const initializeBot = () => {
     try {
       const userId = ctx.from.id.toString();
       const action = ctx.callbackQuery.data;
-      
+      const constant = await Constants.find({})
       switch (action) {
         case 'link_wallet':
           console.log("Setting state to LINKING_WALLET for user:", userId);
@@ -819,16 +846,20 @@ const initializeBot = () => {
 
           const adminWallet = process.env.BURNER_ADDRESS;
           //store this into DB and fetch it from DB
-          const constant = await Constants.find({})
+          
           const solAmount = constant[0].buyAmount
           
           await ctx.reply(
             '*💰 Buy Unlimited Plays for the remainder of*\n\n' +
             'Get Unlimited plays for the remainder of the timer. \n' +
             'Please note the timer is a 24 hour clock and buying right now only grants play for the current time left\n\n' +
-            `Please send ${solAmount} SOL to:\n` +
+            `Please send ${solAmount} SOL from the wallet you currently have linked to this telegramID to:\n` +
             `\`${adminWallet}\`\n\n` +
-            '_Note: Make sure to send the exact amount for automatic verification_',
+            '• You have 5 minutes to complete the transaction.\n' +
+            '• Transaction is monitored automatically.\n' +
+            '• Access will be granted instantly after verification.\n' +
+            '• You can continue using free plays while waiting.\n\n _Note: Make sure to send the exact amount for automatic verification_'
+           ,
             { 
               parse_mode: 'Markdown',
               reply_markup: {
@@ -853,7 +884,11 @@ const initializeBot = () => {
             data: {}
           });
 
-          const tweetText = `🎮 Just found the wildest game in crypto from @Pumpshiedotfun – the OG mascot of @Pumpdotfun!\n\nCompete daily for big prizes, hilarious memes, and leaderboard glory! Play for your fav project and pump that bag 💰🚀\n\n#Pumpshie #Solana #Pumpfun #P2E #PPP`;
+          const tweetText = `
+🎮 Just found the wildest game in crypto from @Pumpshiedotfun – the OG mascot of @Pumpdotfun! \n
+Compete daily for big prizes, hilarious memes, and leaderboard glory! 
+Play for your fav project and pump that bag 💰🚀
+`;
           
           await ctx.reply(
             '🐦 *Tweet to Get Free Plays*\n\n' +
@@ -861,7 +896,7 @@ const initializeBot = () => {
             '1. Copy and tweet this message:\n' +
             '```\n' + tweetText + '\n```\n\n' +
             '2. Reply with your tweet URL\n' +
-            '3. Get 10 free plays after verification!\n\n' +
+            '3. Get ' + constant[0].tweetFreePlays + ' free plays after verification!\n\n' +
             '_Note: This offer is only available once per day_',
             { parse_mode: 'Markdown' }
           );
