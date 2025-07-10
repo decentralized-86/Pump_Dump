@@ -98,16 +98,20 @@ async function startListener() {
         console.log(tx.transaction.message.accountKeys, "tx accountkeys");
         for (const ix of tx.transaction.message.instructions) {
           console.log(ix.programId.toString(), "ix programId");
+          console.log(ix.parsed?.type, "ix parsed type");
           if (
             ix.programId.toString() ===
-              "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb" &&
+              "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" &&
             ix.parsed?.type === "transferChecked"
           ) {
             const { signers, destination, tokenAmount } = ix.parsed.info;
-            if (destination === ata.toBase58()) {
+            console.log(signers, "signers");
+            console.log(destination, "destination");
+            console.log(tokenAmount, "tokenAmount");
+            if (destination.toString() === ata.toString()) {
               if (
                 Number(tokenAmount.amount) ==
-                process.env.VALIDATE_WALLET_AMOUNT
+                process.env.VALIDATE_WALLET_AMOUNT * 10 ** 6
               ) {
                 let wallet = await Wallet.findOne({
                   walletAddress: signers[0],
