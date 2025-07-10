@@ -50,7 +50,7 @@ async function startListener() {
       method: "logsSubscribe",
       params: [
         {
-          mentions: [adminAddress],
+         mentions: [adminAddress.toBase58()],
         },
         {
           commitment: "confirmed",
