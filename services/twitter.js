@@ -21,14 +21,11 @@ async function verifyTweet(twitterLink) {
             'user.fields': ['verified', 'name', 'username', 'public_metrics'],
             'tweet.fields': ['created_at', 'text']
         });
-        
         if (!tweetResponse.data) {
             throw new Error('Tweet not found or not accessible');
         }
         
         // Extract author information
-        const authorId = tweetResponse.data.author_id;
-        const author = tweetResponse.includes?.users?.find(user => user.id === authorId);
         if(!isTweetLessThan10MinOld(tweetResponse.data.created_at)){
             return {
                 success: false,
@@ -36,18 +33,19 @@ async function verifyTweet(twitterLink) {
                 isVerified: false
             }
         }
-        if(!tweetResponse.data.text.includes('SolPumpGame')){
-            return {
-                success: false,
-                error: "Tweet doesnt contain SolPumpGame",
-                isVerified: false
-            }
-        }
+        const tweetText = tweetResponse.data.text.toLowerCase();
+if (!tweetText.includes('pumpshiedotfun') || !tweetText.includes('pumpdotfun')) {
+    return {
+        success: false,
+        error: "Tweet must mention 'Pumpshiedotfun' and 'pumpdotfun'",
+        isVerified: false
+    }
+}
+
         
         return {
             success: true,
             tweetId: tweetId,
-            authorUsername: author.username,
             tweet: {
                 text: tweetResponse.data.text,
                 createdAt: tweetResponse.data.created_at

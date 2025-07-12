@@ -215,8 +215,7 @@ router.get("/all-memes",authenticateToken, async(req,res)=>{
   const meme = await Meme.find({});
   const CandlesRed = meme.filter((ele)=>ele.candleType=='red')
   const CandlesGreen =  meme.filter((ele)=>ele.candleType=='green')
-  const MovingTexts =  meme.filter((ele)=>ele.candleType=='moving')
-  return res.json({CandlesRed,CandlesGreen, MovingTexts})
+  return res.json({CandlesRed,CandlesGreen})
 })
 
 router.get("/rank-me", authenticateToken,async (req, res) => {
