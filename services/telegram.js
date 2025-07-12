@@ -953,7 +953,12 @@ const startBot = async () => {
     // Initialize commands first
     await bot.telegram.setMyCommands([
       { command: 'start', description: 'Start the game' },
+      { command: 'play', description: 'Get game link' },
+      { command: 'profile', description: 'View your profile' },
+      { command: 'leaderboard', description: 'View top players' },
       { command: 'balance', description: 'Check remaining plays' },
+      { command: 'buy', description: 'Purchase more plays' },
+      { command: 'help', description: 'Show help' }
     ]);
     logger.info('Bot commands initialized');
 

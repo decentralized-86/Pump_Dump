@@ -22,9 +22,13 @@ async function getProjectMetadata(projectTokenAddress){
         const metadata = result[0]?.onChainMetadata?.metadata?.data;
         const resp = await axios.get(metadata.uri, {
           maxRedirects: 0,
-          validateStatus: (status) => status === 302
+          validateStatus: (status) => status === 200 || status === 302,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+            'Referer': metadata.uri
+          }
         });
-        
         return {
             name: metadata?.name,
             symbol: metadata?.symbol,

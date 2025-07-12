@@ -52,7 +52,7 @@ const sendReward = async()=>{
 const reset = async()=>{
     try{
         await GameDay.deleteMany({});
-        await PumpUser.updateMany({}, { $set: { highestScore: 0, mcPoints: 0 } });
+        await PumpUser.updateMany({}, { $set: { highestScore: 0, mcPoints: 0 ,tweetVerifiedToday: false} });
         await PumpUser.updateMany(
           { accessType: "paid" },         
           { $set: { accessType: "free" } } 
