@@ -325,6 +325,7 @@ router.get('/rank-players', async(req,res)=>{
         playTime: 1,
         displayName: "$user.displayName",
         username: "$user.username",
+        isGolden: "$project.isGolden",
         avatar: "$user.avatar",
         projectTokenAddress: "$user.projectTokenAddress",
         totalPoints: "$project.totalPoints",
@@ -338,7 +339,7 @@ router.get('/rank-players', async(req,res)=>{
         playTime: -1
       }
     },
-    { $limit: 10 }
+    { $limit:  25}
   ]);
   
   console.log(leaderboard, "leaderboard")
@@ -349,7 +350,7 @@ router.get('/rank-players', async(req,res)=>{
 router.get('/rank-projects',async (req,res)=>{
   const projects = await PumpProject.find({ totalPoints: { $gt: 0 } })
   .sort({ totalPoints: -1 })
-  .limit(10);
+  .limit(30);
   return res.json(projects)
 })
 
@@ -670,7 +671,7 @@ router.get("/history", authenticateToken,async (req, res) => {
         },
       },
       {
-        $limit: 100,
+        $limit: 10,
       },
       {
         $lookup: {
@@ -700,6 +701,7 @@ router.get("/history", authenticateToken,async (req, res) => {
           //date: "$createdAt",
           pName: "$projectName",
           name: "$user.username",
+          isGolden: "$project.isGolden",
           score: "$score",
           avatar: "$user.avatar",
           projectName: "$project.name",
