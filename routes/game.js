@@ -1028,7 +1028,7 @@ router.get("/rank", async (req, res) => {
 });
 
 // Update user's project
-router.post("/project", async (req, res) => {
+router.post("/project", async (req, res) => {//
   try {
     const schema = Joi.object({
       projectId: Joi.string().required()
