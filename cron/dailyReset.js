@@ -1,4 +1,5 @@
 const cron = require('node-cron');
+const moment = require('moment-timezone');
 const {sendTokens} = require('../services/web3')
 const GameDay = require('../models/GameDay');
 const PumpUser = require("../models/PumpUser");
@@ -65,10 +66,13 @@ const reset = async()=>{
 
 const scheduleDailyReset = () => {
   cron.schedule('0 0 * * *', async () => {
-    console.log('🔁 Running daily reset at midnight...');
+    const nowEST = moment().tz('America/New_York').format();
+    console.log(`🔁 Running daily reset at midnight EST... [${nowEST}]`);
 
-    console.log('reseting DB...')
+    console.log('Resetting DB...');
     await reset();
+  }, {
+    timezone: 'America/New_York'  // Handles EST/EDT automatically
   });
 };
 
