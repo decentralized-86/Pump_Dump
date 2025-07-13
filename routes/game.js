@@ -1,4 +1,5 @@
 const express = require("express");
+const moment = require('moment-timezone');
 const PumpUser = require("../models/PumpUser");
 const Constants = require("../models/Constants");
 const Meme = require("../models/Meme");
@@ -1138,24 +1139,30 @@ router.get("/projects/search", async (req, res) => {
   }
 });
 
+router.get('/get-time', async(req,res)=>{
+  try{
+    const now = moment.tz('America/New_York'); // current time in EST/EDT
+
+    const midnight = now.clone().add(1, 'day').startOf('day'); // Tomorrow at 00:00 EST
+
+    const remainingTime = midnight.diff(now)
+    res.status(200).json({remainingTime: remainingTime})
+  }catch(err){
+    return res.status(500).json(err)
+  }
+})
+
 // Get user profile
 router.get('/profileData', authenticateToken, async (req, res) => {
     try {
         const user = req.user;
         const userData = await PumpUser.findOne({tgId: user.userId});
         const project = await PumpProject.findOne({tokenAddress:userData.projectTokenAddress})
-        const now = new Date();
+        const now = moment.tz('America/New_York'); // current time in EST/EDT
 
-        // Create a new Date object for tomorrow at 00:00 (midnight)
-        const midnight = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate() + 1, // Tomorrow
-          0, 0, 0, 0 // At 00:00:00.000
-        );
+        const midnight = now.clone().add(1, 'day').startOf('day'); // Tomorrow at 00:00 EST
 
-        // Return the difference in milliseconds
-        const remainingTime = midnight - now;
+        const remainingTime = midnight.diff(now)
         res.json({
             tgId: userData?.tgId,
             username: userData?.username,
