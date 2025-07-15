@@ -1170,7 +1170,7 @@ router.get('/profileData', authenticateToken, async (req, res) => {
             freePlaysRemaining: userData?.freePlaysRemaining,
             walletAddress: userData?.walletAddress || "",
             projectName: project?.name || "",
-            maxScore: userData.mcPoints,
+            maxScore: userData.highestScore,
             tokenAddress: userData.projectTokenAddress || "",
             projectPoints: project?.totalPoints || 0,
             remainTime: remainingTime
