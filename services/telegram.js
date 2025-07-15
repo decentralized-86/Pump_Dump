@@ -500,7 +500,7 @@ const initializeBot = () => {
       logger.info('Sending welcome message');
       const constant = await Constants.find({})
       const pumpshieMessage = `
-🚀 Welcome to Pumpshie Pumps! 
+🚀 Welcome to Pumpshie Pumps! (use mobile for best experience) 
 Compete for the top score every day and win a huge cash prize!
 The leaderboards reset every 24 hours—so every day is a new chance to win!
 
