@@ -525,7 +525,6 @@ Note: To win the daily jackpot, wallet linking is required.
 
       await ctx.reply(
         pumpshieMessage,
-        // `Welcome to SolPump! 🎮\n\nPlay to earn rewards and compete with others!\n\nYou have:\n- ${user.freePlaysRemaining} free plays remaining\n- Current high score: ${user.highestScore}`,
         {
           reply_markup: {
             inline_keyboard: [
