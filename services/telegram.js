@@ -529,7 +529,7 @@ Note: To win the daily jackpot, wallet linking is required.
             inline_keyboard: [
               [{ text: "🎮 Play Now", web_app: { url: gameUrl } }],
               [{ text: "🔗 Link Wallet", callback_data: "link_wallet" }],
-              [{ text: "💰 Buy Plays", callback_data: "buy_plays" }],
+              [{ text: "💰 Buy Plays with $sol", callback_data: "buy_plays" }],
               [{ text: "🐦 Tweet to Get Plays", callback_data: "tweet_plays" }],
               [
                 {
