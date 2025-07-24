@@ -41,7 +41,7 @@
 //     try {
 //       logger.info('Start command received from user:', ctx.from);
 //       const { id, username, first_name, last_name, language_code } = ctx.from;
-      
+
 //       // Create or update user
 //       logger.info('Looking for existing user with tgId:', id.toString());
 //       let user = await PumpUser.findOne({ tgId: id.toString() });
@@ -60,11 +60,11 @@
 //       } else {
 //         logger.info('Found existing user:', user);
 //       }
-      
+
 //       logger.info('Generating game URL for user:', id.toString());
 //       const gameUrl = generateGameUrl(id.toString());
 //       logger.info('Generated game URL:', gameUrl);
-      
+
 //       logger.info('Sending welcome message');
 //       await ctx.reply(
 //         `Welcome to SolPump! 🎮\n\nPlay to earn rewards and compete with others!\n\nYou have:\n- ${user.freePlaysRemaining} free plays remaining\n- Current high score: ${user.highestScore}`,
@@ -134,11 +134,11 @@
 //     try {
 //       const leaders = await gameService.getDailyLeaderboard(5);
 //       let message = '🏆 *Daily Top Players*\n\n';
-      
+
 //       leaders.forEach((player, index) => {
 //         message += `${index + 1}. ${player.displayName}: ${player.score}\n`;
 //       });
-      
+
 //       await ctx.reply(message, { parse_mode: 'Markdown' });
 //     } catch (error) {
 //       logger.error('Error in leaderboard command:', error);
@@ -155,7 +155,7 @@
 //       }
 
 //       let message = '🎮 *Your Play Balance*\n\n';
-      
+
 //       if (user.accessType === 'token_holder') {
 //         message += '🌟 You have unlimited plays (Token Holder)';
 //       } else if (user.accessType === 'paid') {
@@ -267,7 +267,7 @@
 //   bot.on('callback_query', async (ctx) => {
 //     try {
 //       const action = ctx.callbackQuery.data;
-      
+
 //       switch (action) {
 //         case 'leaderboard':
 //           const leaders = await gameService.getDailyLeaderboard(5);
@@ -277,7 +277,7 @@
 //           });
 //           await ctx.editMessageText(message, { parse_mode: 'Markdown' });
 //           break;
-          
+
 //         case 'buy_plays':
 //           const paymentUrl = `${config.webAppUrl}/payment`;
 //           await ctx.editMessageText(
@@ -296,7 +296,7 @@
 //           );
 //           break;
 //       }
-      
+
 //       await ctx.answerCbQuery();
 //     } catch (error) {
 //       logger.error('Error handling callback query:', error);
@@ -315,7 +315,7 @@
 // const startBot = async () => {
 //   try {
 //     logger.info('Starting Telegram bot with token:', config.telegramBotToken ? 'Token present' : 'Token missing');
-    
+
 //     // Add error handler before launching
 //     bot.catch((err, ctx) => {
 //       logger.error('Bot error:', err);
@@ -386,29 +386,27 @@
 //   generateGameUrl
 // };
 
-
-
-const { Telegraf } = require('telegraf');
-const jwt = require('jsonwebtoken');
-const { PublicKey } = require('@solana/web3.js');
-const config = require('../config');
-const logger = require('./logger');
-const gameService = require('./game');
-const PumpUser = require('../models/PumpUser');
+const { Telegraf } = require("telegraf");
+const jwt = require("jsonwebtoken");
+const { PublicKey } = require("@solana/web3.js");
+const config = require("../config");
+const logger = require("./logger");
+const gameService = require("./game");
+const PumpUser = require("../models/PumpUser");
 const Constants = require("../models/Constants");
-const twitterService = require('./twitter');
-const Wallet = require('../models/Wallet')
-require('dotenv').config();
+const twitterService = require("./twitter");
+const Wallet = require("../models/Wallet");
+require("dotenv").config();
 
 const bot = new Telegraf(config.telegramBotToken);
 
 // User state management
 const USER_STATES = {
-  IDLE: 'idle',
-  LINKING_WALLET: 'linking_wallet',
-  WAITING_FOR_TRANSFER: 'waiting_for_transfer',
-  WAITING_FOR_PAYMENT: 'waiting_for_payment',
-  WAITING_FOR_TWEET: 'waiting_for_tweet'
+  IDLE: "idle",
+  LINKING_WALLET: "linking_wallet",
+  WAITING_FOR_TRANSFER: "waiting_for_transfer",
+  WAITING_FOR_PAYMENT: "waiting_for_payment",
+  WAITING_FOR_TWEET: "waiting_for_tweet",
 };
 
 // In-memory state storage (consider moving to Redis/DB for production)
@@ -419,7 +417,7 @@ const setState = (userId, state) => {
   userStates.set(userId, {
     state,
     timestamp: Date.now(),
-    data: {}
+    data: {},
   });
 };
 
@@ -437,7 +435,8 @@ const clearState = (userId) => {
 setInterval(() => {
   const now = Date.now();
   userStates.forEach((value, key) => {
-    const timeoutMinutes = value.state === USER_STATES.WAITING_FOR_TRANSFER ? 10 : 3;
+    const timeoutMinutes =
+      value.state === USER_STATES.WAITING_FOR_TRANSFER ? 10 : 3;
     if (now - value.timestamp > timeoutMinutes * 60 * 1000) {
       clearState(key);
     }
@@ -446,8 +445,8 @@ setInterval(() => {
 
 // Helper to generate game URL with auth token
 const generateGameUrl = (userId) => {
-  const token = jwt.sign({ userId }, config.jwtSecret, { expiresIn: '24h' });
-  console.log(`${config.webAppUrl}/splash?token=${token}`, "url")
+  const token = jwt.sign({ userId }, config.jwtSecret, { expiresIn: "24h" });
+  console.log(`${config.webAppUrl}/splash?token=${token}`, "url");
   return `${config.webAppUrl}/splash?token=${token}`;
 };
 
@@ -469,57 +468,57 @@ const validateSolAddress = (address) => {
 // Initialize bot commands
 const initializeBot = () => {
   // Start command
-  bot.command('start', async (ctx) => {
+  bot.command("start", async (ctx) => {
     try {
-      logger.info('Start command received from user:', ctx.from);
+      logger.info("Start command received from user:", ctx.from);
       const { id, username, first_name, last_name, language_code } = ctx.from;
-      
+
       // Create or update user
-      logger.info('Looking for existing user with tgId:', id.toString());
+      logger.info("Looking for existing user with tgId:", id.toString());
       let user = await PumpUser.findOne({ tgId: id.toString() });
       if (!user) {
-        logger.info('Creating new user:', { username, first_name, last_name });
+        logger.info("Creating new user:", { username, first_name, last_name });
         user = new PumpUser({
           tgId: id.toString(),
           username,
           firstName: first_name,
           lastName: last_name,
           languageCode: language_code,
-          displayName: username || first_name
+          displayName: username || first_name,
         });
         await user.save();
-        logger.info('New user created:', user);
+        logger.info("New user created:", user);
       } else {
-        logger.info('Found existing user:', user);
+        logger.info("Found existing user:", user);
       }
-      
-      logger.info('Generating game URL for user:', id.toString());
+
+      logger.info("Generating game URL for user:", id.toString());
       const gameUrl = generateGameUrl(id.toString());
-      logger.info('Generated game URL:', gameUrl);
-      
-      logger.info('Sending welcome message');
-      const constant = await Constants.find({})
+      logger.info("Generated game URL:", gameUrl);
+
+      logger.info("Sending welcome message");
+      const constant = await Constants.find({});
       const pumpshieMessage = `
-🚀 Welcome to Pumpshie Pumps! (use mobile for best experience) 
-Compete for the top score every day and win a huge cash prize!
+Welcome to Pumpshie Pumps- We are the .Fun
+Compete for the King of the hill every day and win a huge USDC airdrop!
 The leaderboards reset every 24 hours—so every day is a new chance to win!
 
-💼 Represent Your Favorite Project  
-Play to pump your bag and help your project climb the team leaderboard.  
-Every play counts toward team visibility!
+Represent Your Favorite Project
+Play to pump your bag , shill, and help your project climb the team leaderboard.
+Every play counts toward teams ranking !
 
 😂 Enjoy the Best Crypto Memes  
-Hilarious. Relevant. 100% degenerate-approved.
+Voted on by the community- join the vibes.
 
 🐦 Tweet and earn X extra plays!
 
-💰 Pay ${constant[0].buyAmount} SOL for unlimited plays until the end of the day.
+💰 ${constant[0].buyAmount} Sol Get you unlimited plays for the remainder of the daily timer.
 
-🪙 Hold 100,000 $Pumpshie tokens to unlock unlimited plays forever!  
-Grab some early—prices will go up!
+Holding 6900 $SHIE token get you unlimited plays forever !! 
+So grab some early because the price will go up !!
 
-⚠️ Note: To win the daily jackpot, wallet linking is required.  
-(No wallet connection needed—just a quick verification.)
+Note: To win the daily jackpot, wallet linking is required.
+(No connection to your wallet is needed)
 
 🎮 You have ${user.freePlaysRemaining} free plays remaining.
 `;
@@ -530,139 +529,146 @@ Grab some early—prices will go up!
         {
           reply_markup: {
             inline_keyboard: [
-              [{ text: '🎮 Play Now', web_app: { url: gameUrl } }],
-              [{ text: '🔗 Link Wallet', callback_data: 'link_wallet' }],
-              [{ text: '💰 Buy Plays', callback_data: 'buy_plays' }],
-              [{ text: '🐦 Tweet to Get Plays', callback_data: 'tweet_plays' }]
-            ]
-          }
+              [{ text: "🎮 Play Now", web_app: { url: gameUrl } }],
+              [{ text: "🔗 Link Wallet", callback_data: "link_wallet" }],
+              [{ text: "💰 Buy Plays", callback_data: "buy_plays" }],
+              [{ text: "🐦 Tweet to Get Plays", callback_data: "tweet_plays" }],
+              [
+                {
+                  text: "💬 Buy $SHIE Token",
+                  url: "https://pump.fun/coin/DfCrPM4ixiW2JdmDGWjjuCkhSyPLTmhLGKmh3w5BG7b8",
+                },
+              ],
+            ],
+          },
         }
       );
-      logger.info('Welcome message sent successfully');
+      logger.info("Welcome message sent successfully");
     } catch (error) {
-      logger.error('Error in start command:', error);
-      await ctx.reply('Sorry, there was an error. Please try again later.');
+      logger.error("Error in start command:", error);
+      await ctx.reply("Sorry, there was an error. Please try again later.");
     }
   });
 
   // Help command
-  bot.command('help', async (ctx) => {
+  bot.command("help", async (ctx) => {
     await ctx.reply(
-      '🎮 *SolPump Game Commands*\n\n' +
-      '/start - Start the game\n' +
-      '/play - Get game link\n' +
-      '/profile - View your profile\n' +
-      '/leaderboard - View top players\n' +
-      '/balance - Check remaining plays\n' +
-      '/buy - Purchase more plays\n\n' +
-      '*How to Play*:\n' +
-      '1. Get 10 free plays daily\n' +
-      '2. Tweet about the game for extra plays\n' +
-      '3. Hold tokens for unlimited plays\n' +
-      '4. Pay 0.005 SOL for 24h access\n\n' +
-      '*Need help?* Contact @GameSupport',
-      { parse_mode: 'Markdown' }
+      "🎮 *SolPump Game Commands*\n\n" +
+        "/start - Start the game\n" +
+        "/play - Get game link\n" +
+        "/profile - View your profile\n" +
+        "/leaderboard - View top players\n" +
+        "/balance - Check remaining plays\n" +
+        "/buy - Purchase more plays\n\n" +
+        "*How to Play*:\n" +
+        "1. Get 10 free plays daily\n" +
+        "2. Tweet about the game for extra plays\n" +
+        "3. Hold tokens for unlimited plays\n" +
+        "4. Pay 0.005 SOL for 24h access\n\n" +
+        "*Need help?* Contact @GameSupport",
+      { parse_mode: "Markdown" }
     );
   });
 
   // Profile command
-  bot.command('profile', async (ctx) => {
+  bot.command("profile", async (ctx) => {
     try {
       const user = await gameService.getUserState(ctx.from.id.toString());
       if (!user) {
-        return ctx.reply('Please start the game first using /start');
+        return ctx.reply("Please start the game first using /start");
       }
 
-      const profile = `🎮 *Your Profile*\n\n` +
+      const profile =
+        `🎮 *Your Profile*\n\n` +
         `Name: ${user.displayName}\n` +
         `High Score: ${user.highestScore}\n` +
         `Access Type: ${user.accessType}\n` +
         `Free Plays: ${user.freePlaysRemaining}\n` +
-        `Current Project: ${user.currentProject?.name || 'None'}\n` +
-        `Wallet: ${user.walletAddress ? '✅ Connected' : '❌ Not Connected'}`;
+        `Current Project: ${user.currentProject?.name || "None"}\n` +
+        `Wallet: ${user.walletAddress ? "✅ Connected" : "❌ Not Connected"}`;
 
-      await ctx.reply(profile, { parse_mode: 'Markdown' });
+      await ctx.reply(profile, { parse_mode: "Markdown" });
     } catch (error) {
-      logger.error('Error in profile command:', error);
-      await ctx.reply('Sorry, there was an error. Please try again later.');
+      logger.error("Error in profile command:", error);
+      await ctx.reply("Sorry, there was an error. Please try again later.");
     }
   });
 
   // Leaderboard command
-  bot.command('leaderboard', async (ctx) => {
+  bot.command("leaderboard", async (ctx) => {
     try {
       const leaders = await gameService.getDailyLeaderboard(5);
-      let message = '🏆 *Daily Top Players*\n\n';
-      
+      let message = "🏆 *Daily Top Players*\n\n";
+
       leaders.forEach((player, index) => {
         message += `${index + 1}. ${player.displayName}: ${player.score}\n`;
       });
-      
-      await ctx.reply(message, { parse_mode: 'Markdown' });
+
+      await ctx.reply(message, { parse_mode: "Markdown" });
     } catch (error) {
-      logger.error('Error in leaderboard command:', error);
-      await ctx.reply('Sorry, there was an error. Please try again later.');
+      logger.error("Error in leaderboard command:", error);
+      await ctx.reply("Sorry, there was an error. Please try again later.");
     }
   });
 
   // Balance command
-  bot.command('balance', async (ctx) => {
+  bot.command("balance", async (ctx) => {
     try {
       const user = await gameService.getUserState(ctx.from.id.toString());
       if (!user) {
-        return ctx.reply('Please start the game first using /start');
+        return ctx.reply("Please start the game first using /start");
       }
 
-      let message = '🎮 *Your Play Balance*\n\n';
-      
-      if (user.accessType === 'token_holder') {
-        message += '🌟 You have unlimited plays (Token Holder)';
-      } else if (user.accessType === 'paid') {
+      let message = "🎮 *Your Play Balance*\n\n";
+
+      if (user.accessType === "token_holder") {
+        message += "🌟 You have unlimited plays (Token Holder)";
+      } else if (user.accessType === "paid") {
         const timeLeft = new Date(user.paidAccessUntil) - new Date();
         const hoursLeft = Math.ceil(timeLeft / (1000 * 60 * 60));
         message += `⭐ Paid access active (${hoursLeft}h remaining)`;
       } else {
         message += `🎯 Free plays remaining: ${user.freePlaysRemaining}\n`;
         if (!user.tweetVerifiedToday) {
-          message += '📢 Tweet about us for an extra play!';
+          message += "📢 Tweet about us for an extra play!";
         }
       }
 
-      await ctx.reply(message, { parse_mode: 'Markdown' });
+      await ctx.reply(message, { parse_mode: "Markdown" });
     } catch (error) {
-      logger.error('Error in balance command:', error);
-      await ctx.reply('Sorry, there was an error. Please try again later.');
+      logger.error("Error in balance command:", error);
+      await ctx.reply("Sorry, there was an error. Please try again later.");
     }
   });
 
   // Buy command
-  bot.command('buy', async (ctx) => {
+  bot.command("buy", async (ctx) => {
     try {
       const paymentUrl = `${config.webAppUrl}/payment`;
       await ctx.reply(
-        '💰 *Purchase Game Access*\n\n' +
-        '• 24h Unlimited Access: 0.005 SOL\n' +
-        '• Hold 100k Tokens: Permanent Access\n\n' +
-        'Click below to purchase:',
+        "💰 *Purchase Game Access*\n\n" +
+          "• 24h Unlimited Access: 0.005 SOL\n" +
+          "• Hold 100k Tokens: Permanent Access\n\n" +
+          "Click below to purchase:",
         {
-          parse_mode: 'Markdown',
+          parse_mode: "Markdown",
           reply_markup: {
             inline_keyboard: [
-              [{ text: '💳 Purchase Access', web_app: { url: paymentUrl } }]
-            ]
-          }
+              [{ text: "💳 Purchase Access", web_app: { url: paymentUrl } }],
+            ],
+          },
         }
       );
     } catch (error) {
-      logger.error('Error in buy command:', error);
-      await ctx.reply('Sorry, there was an error. Please try again later.');
+      logger.error("Error in buy command:", error);
+      await ctx.reply("Sorry, there was an error. Please try again later.");
     }
   });
 
   // Add message handler for wallet addresses and tweet URLs
-  bot.on('message', async (ctx) => {
+  bot.on("message", async (ctx) => {
     console.log("Message received:", ctx.message);
-    
+
     // Only handle text messages
     if (!ctx.message.text) {
       console.log("Not a text message, ignoring");
@@ -679,7 +685,8 @@ Grab some early—prices will go up!
       console.log("Current state:", userState);
 
       // Fix state access
-      const currentState = userState.state?.state || userState.state || USER_STATES.IDLE;
+      const currentState =
+        userState.state?.state || userState.state || USER_STATES.IDLE;
       console.log("Resolved state:", currentState);
 
       switch (currentState) {
@@ -688,118 +695,130 @@ Grab some early—prices will go up!
           try {
             const isValid = validateSolAddress(messageText);
             console.log("Validation result:", isValid);
-            
+
             if (isValid) {
               console.log("Valid Solana address:", messageText);
               const burnWallet = process.env.BURNER_ADDRESS;
               const requiredTokens = process.env.VALIDATE_WALLET_AMOUNT;
               const user = await PumpUser.findOne({ tgId: userId });
               let wallet = await Wallet.findOne({ walletAddress: messageText });
-              if(wallet){
-                await ctx.reply('❌ wallet already exists');
+              if (wallet) {
+                await ctx.reply("❌ wallet already exists");
               }
               wallet = new Wallet({
-                  userId: user._id,
-                  walletAddress: messageText,
-                  status: false,
+                userId: user._id,
+                walletAddress: messageText,
+                status: false,
               });
               await wallet.save();
 
-    
               // For now, simulate successful storage
               console.log("Wallet address stored for user:", userId);
-              
+
               await ctx.reply(
-                '✅ *Wallet Address Received*\n\n' +
-                '_Note: You will be eligible for rewards once you Link Wallet._\n\n' +
-                `Please send ${requiredTokens} Pumpshie tokens to:\n` +
-                `\`${burnWallet}\`. \n\nYou have 5 minutes \n\n` +
-                `Note: Make sure to send the exact amount for automatic verification.`,
-                { parse_mode: 'Markdown' }
+                "✅ *Wallet Address Received*\n\n" +
+                  "_Note: You will be eligible for rewards once you Link Wallet._\n\n" +
+                  `Please send ${requiredTokens} $SHIE tokens to:\n` +
+                  `\`${burnWallet}\`. \n\nYou have 5 minutes \n\n` +
+                  `Note: Make sure to send the exact amount for automatic verification.`,
+                { parse_mode: "Markdown" }
               );
 
               // Clear the state since we don't need to track it anymore
               clearState(userId);
               console.log("State cleared for user:", userId);
-
             } else {
               console.log("Invalid Solana address - validation failed");
-              await ctx.reply('❌ Invalid Solana wallet address. Please enter a valid Solana wallet address.');
+              await ctx.reply(
+                "❌ Invalid Solana wallet address. Please enter a valid Solana wallet address."
+              );
             }
           } catch (error) {
             console.error("Error during wallet validation:", error);
-            await ctx.reply('❌ Error validating wallet address. Please try again.');
+            await ctx.reply(
+              "❌ Error validating wallet address. Please try again."
+            );
           }
           break;
 
         case USER_STATES.WAITING_FOR_TWEET:
-          if (messageText.includes('twitter.com') || messageText.includes('x.com')) {
+          if (
+            messageText.includes("twitter.com") ||
+            messageText.includes("x.com")
+          ) {
             await ctx.reply(
-              '🔍 *Verifying Tweet*\n\n' +
-              'Please wait while we verify your tweet...\n' +
-              'This should only take a moment.',
-              { parse_mode: 'Markdown' }
+              "🔍 *Verifying Tweet*\n\n" +
+                "Please wait while we verify your tweet...\n" +
+                "This should only take a moment.",
+              { parse_mode: "Markdown" }
             );
 
             try {
               const user = await PumpUser.findOne({ tgId: userId });
-              
+
               // Check if user has already tweeted today
               const hasTweeted = user.tweetVerifiedToday;
               if (hasTweeted) {
                 await ctx.reply(
-                  '❌ *Tweet Limit Reached*\n\n' +
-                  'You\'ve already received free plays from tweeting today.\n' +
-                  'Please try again tomorrow!',
-                  { parse_mode: 'Markdown' }
+                  "❌ *Tweet Limit Reached*\n\n" +
+                    "You've already received free plays from tweeting today.\n" +
+                    "Please try again tomorrow!",
+                  { parse_mode: "Markdown" }
                 );
                 clearState(userId);
                 break;
               }
 
               // Verify the tweet
-              const result = await twitterService.verifyTweet(messageText, userId);
-              const constant = await Constants.find({})
-              
+              const result = await twitterService.verifyTweet(
+                messageText,
+                userId
+              );
+              const constant = await Constants.find({});
+
               if (result.success) {
                 // Update user's free plays and tweet verification status
-                
+
                 if (user) {
                   user.freePlaysRemaining += constant[0].tweetFreePlays;
                   user.tweetVerifiedToday = true;
                   user.lastTweetVerification = new Date();
                   user.twitterUsername = result.authorUsername;
                   await user.save();
-                  
+
                   await ctx.reply(
-                    '✅ *Tweet Verified Successfully!*\n\n' +
-                    'Thank you for sharing! You\'ve received:\n' +
-                    `• +${constant[0].tweetFreePlays} free plays\n\n` +
-                    'Your new balance:\n' +
-                    `• ${user.freePlaysRemaining} free plays remaining`,
-                    { parse_mode: 'Markdown' }
+                    "✅ *Tweet Verified Successfully!*\n\n" +
+                      "Thank you for sharing! You've received:\n" +
+                      `• +${constant[0].tweetFreePlays} free plays\n\n` +
+                      "Your new balance:\n" +
+                      `• ${user.freePlaysRemaining} free plays remaining`,
+                    { parse_mode: "Markdown" }
                   );
                 }
               } else {
                 await ctx.reply(
-                  '❌ *Tweet Verification Failed*\n\n' +
-                  'Please make sure:\n' +
-                  '• You\'ve used the exact tweet text provided\n' +
-                  '• The tweet is public\n' +
-                  '• You\'ve included @SolPumpGame and @Solana mentions\n\n' +
-                  'Try again with a new tweet.',
-                  { parse_mode: 'Markdown' }
+                  "❌ *Tweet Verification Failed*\n\n" +
+                    "Please make sure:\n" +
+                    "• You've used the exact tweet text provided\n" +
+                    "• The tweet is public\n" +
+                    "• You've included @SolPumpGame and @Solana mentions\n\n" +
+                    "Try again with a new tweet.",
+                  { parse_mode: "Markdown" }
                 );
               }
-              
+
               clearState(userId);
             } catch (error) {
-              logger.error('Error verifying tweet:', error);
-              await ctx.reply('Sorry, there was an error verifying your tweet. Please try again.');
+              logger.error("Error verifying tweet:", error);
+              await ctx.reply(
+                "Sorry, there was an error verifying your tweet. Please try again."
+              );
               clearState(userId);
             }
           } else {
-            await ctx.reply('❌ Invalid tweet URL. Please send a valid Twitter/X post URL.');
+            await ctx.reply(
+              "❌ Invalid tweet URL. Please send a valid Twitter/X post URL."
+            );
           }
           break;
 
@@ -808,64 +827,64 @@ Grab some early—prices will go up!
           break;
       }
     } catch (error) {
-      logger.error('Error handling text message:', error);
-      await ctx.reply('Sorry, there was an error. Please try again later.');
+      logger.error("Error handling text message:", error);
+      await ctx.reply("Sorry, there was an error. Please try again later.");
     }
   });
 
   // Handle callback queries
-  bot.on('callback_query', async (ctx) => {
+  bot.on("callback_query", async (ctx) => {
     try {
       const userId = ctx.from.id.toString();
       const action = ctx.callbackQuery.data;
-      const constant = await Constants.find({})
+      const constant = await Constants.find({});
       switch (action) {
-        case 'link_wallet':
+        case "link_wallet":
           console.log("Setting state to LINKING_WALLET for user:", userId);
           setState(userId, {
             state: USER_STATES.LINKING_WALLET,
             timestamp: Date.now(),
-            data: {}
+            data: {},
           });
-          
+
           await ctx.reply(
-            '🔗 *Link Your Wallet*\n\n' +
-            'Please replay with your public Solana wallet address below.\n\n' +
-            'We will ask you to send a very small amount of Pumpshie to a wallet \nand you will have a few minutes to complete the transaction. \n\nOnce completed you will receive a confirmation that your wallet is linked to this Telegram ID',
-            { parse_mode: 'Markdown' }
+            "🔗 *Link Your Wallet*\n\n" +
+              "Please Enter with your public Solana wallet address below.\n\n" +
+              "We will ask you to send a very small amount to $shie to a wallet and you will have a few minutes to complete the transaction.",
+            "Once completed you will receive a confirmation that your wallet is linked to this Telegram ID.",
+            { parse_mode: "Markdown" }
           );
           break;
 
-        case 'buy_plays':
+        case "buy_plays":
           setState(userId, {
             state: USER_STATES.WAITING_FOR_PAYMENT,
             timestamp: Date.now(),
-            data: {}
+            data: {},
           });
 
           const adminWallet = process.env.BURNER_ADDRESS;
           //store this into DB and fetch it from DB
-          
-          const solAmount = constant[0].buyAmount
-          
+
+          const solAmount = constant[0].buyAmount;
+
           await ctx.reply(
-            '*💰 Buy Unlimited Plays for the remainder of*\n\n' +
-            'Get Unlimited plays for the remainder of the timer. \n' +
-            'Please note the timer is a 24 hour clock and buying right now only grants play for the current time left\n\n' +
-            `Please send ${solAmount} SOL from the wallet you currently have linked to this telegramID to:\n` +
-            `\`${adminWallet}\`\n\n` +
-            '• You have 5 minutes to complete the transaction.\n' +
-            '• Transaction is monitored automatically.\n' +
-            '• Access will be granted instantly after verification.\n' +
-            '• You can continue using free plays while waiting.\n\n _Note: Make sure to send the exact amount for automatic verification_'
-           ,
-            { 
-              parse_mode: 'Markdown',
+            "*💰 Buy Unlimited Plays for the remainder of*\n\n" +
+              "Get Unlimited plays for the remainder of the timer. \n" +
+              "Please note the timer is a 24 hour clock and buying right now only grants play for the current time left in the day,\n\n" +
+              `Please send ${solAmount} SOL from the wallet you currently have linked to this telegramID to:\n` +
+              `\`${adminWallet}\`\n\n` +
+              "• You have 5 minutes to complete the transaction.\n" +
+              "• Transaction is monitored automatically.\n" +
+              "• Access will be granted instantly after verification.\n" +
+              "• You can continue using free plays while waiting.\n\n _Note: Make sure to send the exact amount for automatic verification_",
+            {
+              parse_mode: "Markdown",
               reply_markup: {
                 inline_keyboard: [
-                  [{ text: '❌ Cancel', callback_data: 'cancel_payment' }]
-                ]
-              }
+                  [{ text: "❌ Cancel", callback_data: "cancel_payment" }],
+                ],
+              },
             }
           );
 
@@ -873,120 +892,137 @@ Grab some early—prices will go up!
           // TODO: Implement Solana event listener for payment verification
           // This will be similar to the wallet linking verification
 
-          //listen for 3 minutes and check if the payment is verfied okay send the message back now 
+          //listen for 3 minutes and check if the payment is verfied okay send the message back now
           break;
 
-        case 'tweet_plays':
+        case "tweet_plays":
           setState(userId, {
             state: USER_STATES.WAITING_FOR_TWEET,
             timestamp: Date.now(),
-            data: {}
+            data: {},
           });
 
           const tweetText = `
-🎮 Just found the wildest game in crypto from @Pumpshiedotfun – the OG mascot of @Pumpdotfun! \n
-Compete daily for big prizes, hilarious memes, and leaderboard glory! 
-Play for your fav project and pump that bag 💰🚀
+🎮 Just found the wildest game in crypto from @Pumpshiedotfun – Bringing the Fun back to @pumpdotfun
+
+Be the King of the Hill , buy the end of the day , and Win hundreds or thousands in Usdc airdrops.
+
+Rep your favorite project . Every Play adds to your teams score, ranking and visibility.
+Show who has the strongest community.
+
+Hilarious memes in game, voted on by the community. 
+
+#Pumpshie #Solana #Pumpfun #P2E #PPP $Pump $Shie
 `;
-          
+
           await ctx.reply(
-            '🐦 *Tweet to Get Free Plays*\n\n' +
-            'Follow these steps:\n\n' +
-            '1. Copy and tweet this message:\n' +
-            '```\n' + tweetText + '\n```\n\n' +
-            '2. Reply with your tweet URL\n' +
-            '3. Get ' + constant[0].tweetFreePlays + ' free plays after verification!\n\n' +
-            '_Note: This offer is only available once per day_',
-            { parse_mode: 'Markdown' }
+            "🐦 *Tweet to Get Free Plays*\n\n" +
+              "Follow these steps:\n\n" +
+              "1. Copy and tweet this message:\n" +
+              "```\n" +
+              tweetText +
+              "\n```\n\n" +
+              "2. Reply with your tweet URL\n" +
+              "3. Get " +
+              constant[0].tweetFreePlays +
+              " free plays after verification!\n\n" +
+              "_Note: This offer is only available once per day_",
+            { parse_mode: "Markdown" }
           );
           break;
 
-        case 'cancel_payment':
+        case "cancel_payment":
           if (userState.state === USER_STATES.WAITING_FOR_PAYMENT) {
             clearState(userId);
-            await ctx.reply('Payment process cancelled. You can try again later.');
+            await ctx.reply(
+              "Payment process cancelled. You can try again later."
+            );
           }
           break;
       }
-      
+
       await ctx.answerCbQuery();
     } catch (error) {
-      logger.error('Error handling callback query:', error);
-      await ctx.answerCbQuery('Sorry, there was an error. Please try again later.');
+      logger.error("Error handling callback query:", error);
+      await ctx.answerCbQuery(
+        "Sorry, there was an error. Please try again later."
+      );
     }
   });
 
   // Error handling
   bot.catch((err, ctx) => {
-    logger.error('Bot error:', err);
-    ctx.reply('Sorry, something went wrong. Please try again later.');
+    logger.error("Bot error:", err);
+    ctx.reply("Sorry, something went wrong. Please try again later.");
   });
 };
 
 // Start bot
 const startBot = async () => {
   try {
-    logger.info('Starting Telegram bot with token:', config.telegramBotToken ? 'Token present' : 'Token missing');
-    
+    logger.info(
+      "Starting Telegram bot with token:",
+      config.telegramBotToken ? "Token present" : "Token missing"
+    );
+
     // Add error handler before launching
     bot.catch((err, ctx) => {
-      logger.error('Bot error:', err);
+      logger.error("Bot error:", err);
       if (ctx) {
-        ctx.reply('Sorry, something went wrong. Please try again later.');
+        ctx.reply("Sorry, something went wrong. Please try again later.");
       }
     });
 
     // Add debug logging for updates
     bot.use((ctx, next) => {
-      logger.info('Full context object:', {
+      logger.info("Full context object:", {
         from: ctx.from,
         chat: ctx.chat,
         message: ctx.message,
         callbackQuery: ctx.callbackQuery,
         update: ctx.update,
         updateType: ctx.updateType,
-        state: ctx.state
+        state: ctx.state,
       });
       return next();
     });
 
     // Initialize commands first
     await bot.telegram.setMyCommands([
-      { command: 'start', description: 'Start the game' },
-      { command: 'play', description: 'Get game link' },
-      { command: 'profile', description: 'View your profile' },
-      { command: 'leaderboard', description: 'View top players' },
-      { command: 'balance', description: 'Check remaining plays' },
-      { command: 'buy', description: 'Purchase more plays' },
-      { command: 'help', description: 'Show help' }
+      { command: "start", description: "Start the game" },
+      { command: "play", description: "Get game link" },
+      { command: "profile", description: "View your profile" },
+      { command: "leaderboard", description: "View top players" },
+      { command: "balance", description: "Check remaining plays" },
+      { command: "buy", description: "Purchase more plays" },
+      { command: "help", description: "Show help" },
     ]);
-    logger.info('Bot commands initialized');
+    logger.info("Bot commands initialized");
 
     // Initialize bot handlers
     initializeBot();
-    logger.info('Bot handlers initialized');
+    logger.info("Bot handlers initialized");
 
     // Try to get bot info to verify token
     const botInfo = await bot.telegram.getMe();
-    logger.info('Bot info retrieved:', botInfo);
+    logger.info("Bot info retrieved:", botInfo);
 
     // Finally, launch the bot
-    logger.info('Starting bot in polling mode');
+    logger.info("Starting bot in polling mode");
     await bot.launch();
-    logger.info('Bot started in polling mode');
+    logger.info("Bot started in polling mode");
 
     // Enable graceful stop
-    process.once('SIGINT', () => {
-      logger.info('SIGINT received, stopping bot...');
-      bot.stop('SIGINT');
+    process.once("SIGINT", () => {
+      logger.info("SIGINT received, stopping bot...");
+      bot.stop("SIGINT");
     });
-    process.once('SIGTERM', () => {
-      logger.info('SIGTERM received, stopping bot...');
-      bot.stop('SIGTERM');
+    process.once("SIGTERM", () => {
+      logger.info("SIGTERM received, stopping bot...");
+      bot.stop("SIGTERM");
     });
-
   } catch (error) {
-    logger.error('Error starting bot:', error);
+    logger.error("Error starting bot:", error);
     throw error;
   }
 };
@@ -994,5 +1030,5 @@ const startBot = async () => {
 module.exports = {
   bot,
   startBot,
-  generateGameUrl
-}; 
+  generateGameUrl,
+};
