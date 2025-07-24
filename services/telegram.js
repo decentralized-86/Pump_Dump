@@ -450,7 +450,6 @@ const generateGameUrl = (userId) => {
   return `${config.webAppUrl}/splash?token=${token}`;
 };
 
-// Validate Solana address
 const validateSolAddress = (address) => {
   try {
     console.log("Attempting to create PublicKey from:", address);
@@ -525,7 +524,6 @@ Note: To win the daily jackpot, wallet linking is required.
 
       await ctx.reply(
         pumpshieMessage,
-        // `Welcome to SolPump! 🎮\n\nPlay to earn rewards and compete with others!\n\nYou have:\n- ${user.freePlaysRemaining} free plays remaining\n- Current high score: ${user.highestScore}`,
         {
           reply_markup: {
             inline_keyboard: [
@@ -536,7 +534,7 @@ Note: To win the daily jackpot, wallet linking is required.
               [
                 {
                   text: "💬 Buy $SHIE Token",
-                  url: "https://pump.fun/coin/DfCrPM4ixiW2JdmDGWjjuCkhSyPLTmhLGKmh3w5BG7b8",
+                  url: "https://pump.fun/coin/8NX2jnJawkxrXN1tJmbNSks7D2zCCSdwGDksfoVZpump",
                 },
               ],
             ],
