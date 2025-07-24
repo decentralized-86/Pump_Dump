@@ -21,7 +21,7 @@ async function startListener() {
 
   // ✅ Get associated token account
   // const ata = await getAssociatedTokenAddress(mint, wallet);
-  const ata = new PublicKey("BFvo8v67QjXQ4V83PYnjszVvuy84XNMcSesas8GwnpJd");
+  const ata = new PublicKey("75F3Mzr947UtCjuDD7vbrywmWcyhURwF77LB2ACZSykE");
   console.log('🧾 Associated Token Account:', ata.toBase58());
 
   const ws = new WebSocket(HELIUS_WS);
