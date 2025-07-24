@@ -450,7 +450,6 @@ const generateGameUrl = (userId) => {
   return `${config.webAppUrl}/splash?token=${token}`;
 };
 
-// Validate Solana address
 const validateSolAddress = (address) => {
   try {
     console.log("Attempting to create PublicKey from:", address);
