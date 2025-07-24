@@ -536,7 +536,7 @@ Note: To win the daily jackpot, wallet linking is required.
               [
                 {
                   text: "💬 Buy $SHIE Token",
-                  url: "https://pump.fun/coin/DfCrPM4ixiW2JdmDGWjjuCkhSyPLTmhLGKmh3w5BG7b8",
+                  url: "https://pump.fun/coin/8NX2jnJawkxrXN1tJmbNSks7D2zCCSdwGDksfoVZpump",
                 },
               ],
             ],
