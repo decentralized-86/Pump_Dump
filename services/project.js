@@ -34,6 +34,7 @@ async function getProjectMetadata(projectTokenAddress){
             symbol: metadata?.symbol,
             uri: resp.data?.image|| null,
         };  
+        //comment
     }catch(err){
         console.log(err)
         throw new Error("Error fetching token details metadata")
