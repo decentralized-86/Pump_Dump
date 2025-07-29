@@ -699,16 +699,15 @@ Note: To win the daily jackpot, wallet linking is required.
               const burnWallet = process.env.BURNER_ADDRESS;
               const requiredTokens = process.env.VALIDATE_WALLET_AMOUNT;
               const user = await PumpUser.findOne({ tgId: userId });
-              // let wallet = await Wallet.findOne({ walletAddress: messageText });
-              // if (wallet) {
-              //   await ctx.reply("❌ wallet already exists");
-              // }
-              const wallet = new Wallet({
-                userId: user._id,
-                walletAddress: messageText,
-                status: false,
-              });
-              await wallet.save();
+              let wallet = await Wallet.findOne({ walletAddress: messageText });
+              if (!wallet) {
+                wallet = new Wallet({
+                  userId: user._id,
+                  walletAddress: messageText,
+                  status: false,
+                });
+                await wallet.save();
+              }
 
               // For now, simulate successful storage
               console.log("Wallet address stored for user:", userId);
