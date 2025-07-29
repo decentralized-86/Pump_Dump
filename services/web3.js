@@ -93,8 +93,10 @@ const sendTokens = async (walletAddress, amount) => {
 const checkTokenHold = async(ata)=>{
   try{
     const tokenAccount = await getAccount(connection, ata);
+    console.log(tokenAccount, "tokenAccount")
     const constant = await Constants.find({})
     const hasToken = tokenAccount.amount > constant[0].tokenHolderAmount;
+    console.log(hasToken, "hasToken")
     console.log("is token holder:", hasToken)
     return hasToken;
   }catch(err){
