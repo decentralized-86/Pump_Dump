@@ -4250,3 +4250,11 @@
 {"level":"info","message":"Bot handlers initialized","timestamp":"2025-07-13T07:27:46.936Z"}
 {"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-07-13T07:27:47.115Z","username":"PumpshiePumpsBot"}
 {"level":"info","message":"Starting bot in polling mode","timestamp":"2025-07-13T07:27:47.115Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-07-30T15:02:58.733Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-07-30T15:02:58.881Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-07-30T15:02:58.887Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-07-30T15:02:58.891Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-07-30T15:02:59.685Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-07-30T15:02:59.687Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-07-30T15:02:59.875Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-07-30T15:02:59.875Z"}
