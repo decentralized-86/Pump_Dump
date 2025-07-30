@@ -130,8 +130,9 @@ async function startListener() {
                 let user = await PumpUser.findOne({ _id: wallet.userId });
                 console.log(signers[0], "signers[0]");
                 user.walletAddress = signers[0];
-                console.log(ata, "ata before checkTokenHold");
-                const isTokenHolder = await checkTokenHold(ata);
+                const signerAta = await getAssociatedTokenAddress(mint, signers[0]);
+                console.log(signerAta," signerAta")
+                const isTokenHolder = await checkTokenHold(signerAta);
                 console.log(isTokenHolder, "isTokenHolder");
                 if(isTokenHolder) user.accessType = "token_holder"
                 wallet.status = true;
