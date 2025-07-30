@@ -393,6 +393,7 @@ const config = require("../config");
 const logger = require("./logger");
 const gameService = require("./game");
 const PumpUser = require("../models/PumpUser");
+const PumpProject = require("../models/PumpProject");
 const Constants = require("../models/Constants");
 const twitterService = require("./twitter");
 const Wallet = require("../models/Wallet");
