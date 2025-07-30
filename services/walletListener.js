@@ -6,7 +6,7 @@ const Wallet = require("../models/Wallet");
 const Constants = require("../models/Constants");
 require('dotenv').config();
 const { bot } = require('./telegram');
-const {checkTokenHold} = require("./web3")
+const {checkTokenHold, findAssociatedTokenAddress} = require("./web3")
 
 // ✅ CONFIGURE THESE
 const HELIUS_RPC = process.env.HELIUS_RPC;
@@ -130,7 +130,10 @@ async function startListener() {
                 let user = await PumpUser.findOne({ _id: wallet.userId });
                 console.log(signers[0], "signers[0]");
                 user.walletAddress = signers[0];
-                const signerAta = await getAssociatedTokenAddress(mint, signers[0]);
+                const signerAta =  findAssociatedTokenAddress({
+                  walletAddress: new PublicKey(signers[0]),
+                  tokenMintAddress: new PublicKey(mint),
+                });
                 console.log(signerAta," signerAta")
                 const isTokenHolder = await checkTokenHold(signerAta);
                 console.log(isTokenHolder, "isTokenHolder");
