@@ -1,11 +1,16 @@
 const cron = require('node-cron');
 const moment = require('moment-timezone');
-const {sendTokens} = require('../services/web3')
+const {sendTokens, getTokenHolder} = require('../services/web3')
 const GameDay = require('../models/GameDay');
 const PumpUser = require("../models/PumpUser");
 const PumpProject = require("../models/PumpProject");
 const logger = require("../services/logger");
 const Constants = require("../models/Constants");
+const {
+  PublicKey,
+} = require('@solana/web3.js');
+require('dotenv').config();
+const logger = require('./logger');
 require('dotenv').config();
 
 const sendReward = async()=>{
@@ -64,6 +69,32 @@ const reset = async()=>{
     }
 }
 
+const checAndUpdateTokenHolder = async()=>{
+  try{
+    const users = await PumpUser.find({ walletAddress: { $exists: true, $ne: null } });
+    for (const user of users) {
+      const publicKey = new PublicKey(user.walletAddress);
+      const isTokenHolder = await getTokenHolder(publicKey)
+      if(isTokenHolder) {
+        await PumpUser.updateOne(
+          { _id: user._id },
+          { $set: { accessType: 'token_holder'} }
+        );
+      }
+      else{
+        if(user.accessType=='token_holder'){
+          await PumpUser.updateOne(
+            { _id: user._id },
+            { $set: { accessType: 'free'} }
+          );
+        }
+      }
+    }
+  }catch(err){
+    logger.err(err)
+  }
+}
+
 const scheduleDailyReset = () => {
   cron.schedule('0 0 * * *', async () => {
     const nowEST = moment().tz('America/New_York').format();
@@ -71,6 +102,7 @@ const scheduleDailyReset = () => {
 
     console.log('Resetting DB...');
     await reset();
+    await checAndUpdateTokenHolder();
   }, {
     timezone: 'America/New_York'  // Handles EST/EDT automatically
   });

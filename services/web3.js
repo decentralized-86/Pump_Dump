@@ -10,12 +10,8 @@ const {
 const {
     getAccount,
     getOrCreateAssociatedTokenAccount,
-    createTransferInstruction,
-    TOKEN_PROGRAM_ID,
 } = require('@solana/spl-token');
 require('dotenv').config();
-const fs = require('fs');
-const logger = require('./logger');
 const bs58 = require("bs58");
 const Constants = require("../models/Constants");
   // ⚙️ Setup
@@ -30,6 +26,18 @@ const adminKeypair = Keypair.fromSecretKey(secretKey);
   
   // Addresses
 const mintAddress = new PublicKey(process.env.TOKEN_MINT_ADDRESS);
+
+
+const getTokenHolder = async(userWalletAddress)=>{
+  try{
+    const signerAta = await getAssociatedTokenAddress(mint, userWalletAddress);
+    const isTokenHolder = await checkTokenHold(signerAta);
+    return isTokenHolder;
+   
+  }catch(err){
+    console.log(err)
+  }
+}
   
   // 📤 Send 1000 tokens (adjust for decimals!)
 const sendTokens = async (walletAddress, amount) => {
@@ -105,4 +113,4 @@ const checkTokenHold = async(ata)=>{
   }
 }
   
-module.exports = {sendTokens,checkTokenHold}
+module.exports = {sendTokens,checkTokenHold, getTokenHolder}

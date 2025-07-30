@@ -477,6 +477,8 @@ const initializeBot = () => {
       let user = await PumpUser.findOne({ tgId: id.toString() });
       if (!user) {
         logger.info("Creating new user:", { username, first_name, last_name });
+        let project = await PumpProject.findOne({tokenAddress:process.env.TOKEN_MINT_ADDRESS})
+        project.playerCount = project.playerCount+1;
         user = new PumpUser({
           tgId: id.toString(),
           username,
@@ -484,8 +486,10 @@ const initializeBot = () => {
           lastName: last_name,
           languageCode: language_code,
           displayName: username || first_name,
+          projectTokenAddress: process.env.TOKEN_MINT_ADDRESS,
         });
         await user.save();
+        await project.save();
         logger.info("New user created:", user);
       } else {
         logger.info("Found existing user:", user);
@@ -699,15 +703,18 @@ Note: To win the daily jackpot, wallet linking is required.
               const burnWallet = process.env.BURNER_ADDRESS;
               const requiredTokens = process.env.VALIDATE_WALLET_AMOUNT;
               const user = await PumpUser.findOne({ tgId: userId });
-              let wallet = await Wallet.findOne({ walletAddress: messageText });
-              if (!wallet) {
+              let wallet = await Wallet.findOne({ userId: user._id });
+              if (wallet) {
+                await Wallet.deleteOne({ userId: user._id });
+              }
+              
                 wallet = new Wallet({
                   userId: user._id,
                   walletAddress: messageText,
                   status: false,
                 });
                 await wallet.save();
-              }
+              
 
               // For now, simulate successful storage
               console.log("Wallet address stored for user:", userId);
