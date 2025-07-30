@@ -10,8 +10,7 @@ const {
   PublicKey,
 } = require('@solana/web3.js');
 require('dotenv').config();
-const logger = require('./logger');
-require('dotenv').config();
+
 
 const sendReward = async()=>{
     try{
