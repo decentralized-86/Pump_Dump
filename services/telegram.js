@@ -704,7 +704,9 @@ Note: To win the daily jackpot, wallet linking is required.
               const burnWallet = process.env.BURNER_ADDRESS;
               const requiredTokens = process.env.VALIDATE_WALLET_AMOUNT;
               const user = await PumpUser.findOne({ tgId: userId });
+              console.log("user",user);
               let wallet = await Wallet.findOne({ userId: user._id });
+              console.log("wallet",wallet);
               if (wallet) {
                 await Wallet.deleteOne({ userId: user._id });
               }
