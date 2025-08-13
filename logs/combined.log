@@ -4299,3 +4299,99 @@
 {"level":"info","message":"Generated game URL:","timestamp":"2025-07-30T15:28:47.143Z"}
 {"level":"info","message":"Sending welcome message","timestamp":"2025-07-30T15:28:47.143Z"}
 {"level":"info","message":"Welcome message sent successfully","timestamp":"2025-07-30T15:28:50.208Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-13T08:33:39.573Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-08-13T08:33:39.626Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-08-13T08:33:39.627Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-08-13T08:33:39.628Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-08-13T08:33:40.257Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-08-13T08:33:40.260Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-08-13T08:33:40.415Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-08-13T08:33:40.416Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-13T08:34:05.737Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-08-13T08:34:05.767Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-08-13T08:34:05.767Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-08-13T08:34:05.768Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-08-13T08:34:06.392Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-08-13T08:34:06.394Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-08-13T08:34:06.560Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-08-13T08:34:06.561Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-13T08:34:12.300Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-08-13T08:34:12.316Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-08-13T08:34:12.317Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-08-13T08:34:12.317Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-08-13T08:34:12.947Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-08-13T08:34:12.948Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-08-13T08:34:13.118Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-08-13T08:34:13.118Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-13T08:34:24.975Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-08-13T08:34:24.991Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-08-13T08:34:24.992Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-08-13T08:34:24.992Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-08-13T08:34:25.627Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-08-13T08:34:25.628Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-08-13T08:34:25.788Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-08-13T08:34:25.788Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-13T08:59:22.774Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-08-13T08:59:22.807Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-08-13T08:59:22.808Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-08-13T08:59:22.808Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-08-13T08:59:23.449Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-08-13T08:59:23.450Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-08-13T08:59:23.617Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-08-13T08:59:23.618Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-13T08:59:56.298Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-08-13T08:59:56.313Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-08-13T08:59:56.313Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-08-13T08:59:56.314Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-08-13T08:59:56.911Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-08-13T08:59:56.912Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-08-13T08:59:57.069Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-08-13T08:59:57.070Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-13T09:04:26.111Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-08-13T09:04:26.173Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-08-13T09:04:26.174Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-08-13T09:04:26.174Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-08-13T09:04:26.805Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-08-13T09:04:26.808Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-08-13T09:04:26.971Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-08-13T09:04:26.971Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-13T09:16:49.915Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-08-13T09:16:49.959Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-08-13T09:16:49.960Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-08-13T09:16:49.960Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-08-13T09:16:50.592Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-08-13T09:16:50.594Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-08-13T09:16:50.772Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-08-13T09:16:50.772Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-13T09:16:55.640Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-08-13T09:16:55.655Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-08-13T09:16:55.655Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-08-13T09:16:55.656Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-08-13T09:16:56.284Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-08-13T09:16:56.285Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-08-13T09:16:56.452Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-08-13T09:16:56.453Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-13T09:19:19.190Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-08-13T09:19:19.205Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-08-13T09:19:19.206Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-08-13T09:19:19.206Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-08-13T09:19:19.841Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-08-13T09:19:19.842Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-08-13T09:19:20.009Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-08-13T09:19:20.009Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-13T09:20:06.467Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-08-13T09:20:06.483Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-08-13T09:20:06.483Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-08-13T09:20:06.483Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-08-13T09:20:07.087Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-08-13T09:20:07.088Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-08-13T09:20:07.245Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-08-13T09:20:07.245Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-08-13T11:34:04.815Z"}
+{"level":"info","message":"Global day cron jobs initialized","timestamp":"2025-08-13T11:34:04.868Z"}
+{"level":"info","message":"Starting Telegram bot with token:","timestamp":"2025-08-13T11:34:04.869Z"}
+{"level":"info","message":"Telegram bot started","timestamp":"2025-08-13T11:34:04.869Z"}
+{"level":"info","message":"Bot commands initialized","timestamp":"2025-08-13T11:34:05.485Z"}
+{"level":"info","message":"Bot handlers initialized","timestamp":"2025-08-13T11:34:05.486Z"}
+{"can_connect_to_business":false,"can_join_groups":true,"can_read_all_group_messages":false,"first_name":"Pumpshie Pumps","has_main_web_app":false,"id":7851245110,"is_bot":true,"level":"info","message":"Bot info retrieved:","supports_inline_queries":false,"timestamp":"2025-08-13T11:34:05.647Z","username":"PumpshiePumpsBot"}
+{"level":"info","message":"Starting bot in polling mode","timestamp":"2025-08-13T11:34:05.648Z"}

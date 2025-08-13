@@ -25,6 +25,7 @@ async function startListener() {
   console.log('🧾 Associated Token Account:', ata.toBase58());
 
   const ws = new WebSocket(HELIUS_WS);
+  let reconnectTimeout;
 
   ws.on("open", () => {
     console.log("🔌 WebSocket connected");
@@ -60,6 +61,11 @@ async function startListener() {
 
     ws.send(JSON.stringify(subscribeMsg));
     ws.send(JSON.stringify(adminSubscribeMsg));
+    ws.pingInterval = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.ping();
+      }
+    }, 30000);
   });
 
   ws.on("message", async (data) => {
@@ -235,11 +241,26 @@ async function startListener() {
 
   ws.on("close", () => {
     console.log("❌ WebSocket disconnected");
+    cleanupAndReconnect();
   });
 
   ws.on("error", (err) => {
     console.error("⚠️ WebSocket error:", err.message);
+    cleanupAndReconnect();
   });
+
+  function cleanupAndReconnect() {
+    if (ws.pingInterval) clearInterval(ws.pingInterval);
+    if (reconnectTimeout) clearTimeout(reconnectTimeout);
+  
+    // Retry after delay
+    reconnectTimeout = setTimeout(() => {
+      console.log("🔄 Reconnecting WebSocket...");
+      startListener();
+    }, 2000);
+  }
 }
+
+
 
 module.exports = { startListener };
