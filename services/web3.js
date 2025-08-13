@@ -10,6 +10,8 @@ const {
 const {
     getAccount,
     getOrCreateAssociatedTokenAccount,
+    TOKEN_PROGRAM_ID,
+    ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require('@solana/spl-token');
 require('dotenv').config();
 const bs58 = require("bs58");
@@ -112,5 +114,19 @@ const checkTokenHold = async(ata)=>{
     return false
   }
 }
+
+const findAssociatedTokenAddress = ({
+  walletAddress,
+  tokenMintAddress,
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [
+      walletAddress.toBuffer(),
+      TOKEN_PROGRAM_ID.toBuffer(),
+      tokenMintAddress.toBuffer(),
+    ],
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  )[0];
+};
   
-module.exports = {sendTokens,checkTokenHold, getTokenHolder}
+module.exports = {sendTokens,checkTokenHold, getTokenHolder, findAssociatedTokenAddress}
